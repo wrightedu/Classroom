@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ORGANIZATION="wrightedu"
+ORGANIZATION="mkijowski"
 
 # Get the authenticated username
 
