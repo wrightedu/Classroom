@@ -1,13 +1,24 @@
 #!/bin/bash
 
-ORGANIZATION="mkijowski"
+ORGANIZATION="WSU-kkoppin"
 
-# Get the authenticated username
-
+# get the authenticated username
 USERNAME=$(gh api user --jq '.login')
 
 echo "Authenticated as $USERNAME"
 
+# checking org membership and role
 ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
 
-echo "Authenticated user, $USERNAME, has the role of $ROLE in $ORGANIZATION"
+# if user is not in organization, exit the program 
+if [ $? -ne 0 ]; then
+	echo "$USERNAME is not apart of the $ORGANIZATION organization."
+	exit 1
+fi
+
+if [ "$ROLE" != "admin" ]; then
+       echo "$USERNAME is not an organization owner"
+       exit 1
+fi
+
+echo "$USERNAME is an owner of the $ORGANIZATION"
