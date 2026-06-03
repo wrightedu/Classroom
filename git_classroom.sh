@@ -3,10 +3,8 @@
 checkOrganizationOwnership() {
 ORGANIZATION="$1"
 
-# get the authenticated username
+# get the username
 USERNAME=$(gh api user --jq '.login')
-
-echo "Authenticated as $USERNAME"
 
 # checking org membership and role
 ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
@@ -19,7 +17,7 @@ fi
 
 # if the role is not admin, exit program
 if [ "$ROLE" != "admin" ]; then
-       echo "$USERNAME is not an organization owner"
+       echo "$USERNAME is not an owner of $ORGANIZATION"
        exit 1
 fi
 
@@ -27,3 +25,6 @@ fi
 echo "$USERNAME is an owner of the $ORGANIZATION"
 }
 
+echo "Which org are you checking for? "
+read ORGANIZATION
+checkOrganizationOwnership "$ORGANIZATION"
