@@ -1,6 +1,7 @@
 #!/bin/bash
 
-ORGANIZATION="WSU-kkoppin"
+checkOrganizationOwnership() {
+ORGANIZATION="$1"
 
 # get the authenticated username
 USERNAME=$(gh api user --jq '.login')
@@ -16,9 +17,13 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+# if the role is not admin, exit program
 if [ "$ROLE" != "admin" ]; then
        echo "$USERNAME is not an organization owner"
        exit 1
 fi
 
+# validation of user is owner of organization
 echo "$USERNAME is an owner of the $ORGANIZATION"
+}
+
