@@ -37,30 +37,29 @@ isGitAuth(){
     fi
 }
 
-# Check the organization ownership
+# checkOrganizationOnership
+#
+# Verifies that the authenticated GitHub user is an owner of the specified GitHub organization
+#
+# Inputs: ORGANIZATION - GitHub organization
+# Outputs: Prints message whether the user is an owner of specified organization
+
 checkOrganizationOwnership() {
-ORGANIZATION="$1"
+	ORGANIZATION="$1"
+	USERNAME=$(gh api user --jq '.login')
+	ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
 
-# get the username
-USERNAME=$(gh api user --jq '.login')
+	if [ $? -ne 0 ]; then
+		echo "$USERNAME is not apart of the $ORGANIZATION organization."
+		exit 1
+	fi
 
-# checking org membership and role
-ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
+	if [ "$ROLE" != "admin" ]; then
+       		echo "$USERNAME is not an owner of $ORGANIZATION"
+       		exit 1
+	fi
 
-# if user is not in organization, exit the program 
-if [ $? -ne 0 ]; then
-	echo "$USERNAME is not apart of the $ORGANIZATION organization."
-	exit 1
-fi
-
-# if the role is not admin, exit program
-if [ "$ROLE" != "admin" ]; then
-       echo "$USERNAME is not an owner of $ORGANIZATION"
-       exit 1
-fi
-
-# validation of user is owner of organization
-echo "$USERNAME is an owner of the $ORGANIZATION"
+	echo "$USERNAME is an owner of the $ORGANIZATION"
 }
 
 
