@@ -1,36 +1,34 @@
 #!/bin/bash
 
-# Check if the gh is installed.
+# Verifies that GH is installed.
+# Outputs:
+# 		GH is installed
+#		or an error message that prompts user to install it
 isGitInstalled(){
-	# Get git version, discard output, and get exit code
 	if gh --version >/dev/null 2>&1; then
-		echo "Git(gh) is installed."
+		echo "GH is installed."
+		return 0
 	else
-		echo "Git(gh) is not installed."
-
-		# Ask user if they want to install git 
-		read -p "Install Git(gh) now? (Y/N): " choice
-	
-	# Check if the user entered y or Y.
-    	if [[ "$choice" =~ ^[Yy]$ ]]; then
-        	sudo apt update
-        	sudo apt install gh
-    		fi
+		echo "Error: GH is not installed"
+		echo "Please install it from:"
+		echo "https://cli.github.com/"
+		return 1
 	fi	
 }
 
-# Check if gh is authenticated with a GitHub account.
+# Check if gh is authenticated with a GitHub account
+# Input:
+#		User input (y/n)
+# Outputs:
+# 		GH is authenticated with GitHub
+#		or Gh isnt authenticated and prompts user to login
 isGitAuth(){
-	# Get git auth status, discard output, and get exit code
-    	if gh auth status >/dev/null 2>&1; then
-		echo "Git(gh) is authenticated with GitHub."
-    	else
-		echo "Git(gh) is not authenticated with GitHub."
-
-        # Ask the user if they want to log in.
+    if gh auth status >/dev/null 2>&1; then
+		echo "GH is authenticated with GitHub."
+    else
+		echo "GH is not authenticated with GitHub."
         read -p "Would you like to log in now? (Y/N): " choice
-
-        # Check if the user entered y or Y.
+		
         if [[ "$choice" =~ ^[Yy]$ ]]; then
             gh auth login
         fi
@@ -65,10 +63,11 @@ checkOrganizationOwnership() {
 
 # Main
 
-# if git is intalled run git authenticator
-if isGitInstalled; then
-    isGitAuth
+# if git isnt installed exit
+if ! isGitInstalled; then 
+	exit 1
 fi
+isGitAuth
 
 # calls checkOrganizationOwnership
 echo "Which org are you checking for? "
