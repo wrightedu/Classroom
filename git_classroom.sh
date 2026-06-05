@@ -1,31 +1,26 @@
 #!/bin/bash
 
-# Check if the gh is installed.
+# Verifies that GH is installed.
+# Verifies that GH is authenticated.
+# Displays appropriate status messages.
 isGitInstalled(){
-	# Get git version, discard output, and get exit code
 	if gh --version >/dev/null 2>&1; then
-		echo "Git(gh) is installed."
+		echo "GH is installed."
+		return 0
 	else
-		echo "Git(gh) is not installed."
-
-		# Ask user if they want to install git 
-		read -p "Install Git(gh) now? (Y/N): " choice
-	
-	# Check if the user entered y or Y.
-    	if [[ "$choice" =~ ^[Yy]$ ]]; then
-        	sudo apt update
-        	sudo apt install gh
-    		fi
+		echo
+		echo
+		echo
 	fi	
 }
 
 # Check if gh is authenticated with a GitHub account.
 isGitAuth(){
 	# Get git auth status, discard output, and get exit code
-    	if gh auth status >/dev/null 2>&1; then
-		echo "Git(gh) is authenticated with GitHub."
-    	else
-		echo "Git(gh) is not authenticated with GitHub."
+    if gh auth status >/dev/null 2>&1; then
+		echo "GH is authenticated with GitHub."
+    else
+		echo "GH is not authenticated with GitHub."
 
         # Ask the user if they want to log in.
         read -p "Would you like to log in now? (Y/N): " choice
