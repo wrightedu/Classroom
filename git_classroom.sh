@@ -17,6 +17,8 @@ isGitInstalled(){
 }
 
 # Check if gh is authenticated with a GitHub account
+# Input:
+#		User input (y/n)
 # Outputs:
 # 		GH is authenticated with GitHub
 #		or Gh isnt authenticated and prompts user to login
