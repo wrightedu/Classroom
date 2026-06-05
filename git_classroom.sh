@@ -1,31 +1,32 @@
 #!/bin/bash
 
 # Verifies that GH is installed.
-# Verifies that GH is authenticated.
-# Displays appropriate status messages.
+# Outputs:
+# 		GH is installed
+#		or an error message that prompts user to install it
 isGitInstalled(){
 	if gh --version >/dev/null 2>&1; then
 		echo "GH is installed."
 		return 0
 	else
-		echo
-		echo
-		echo
+		echo "Error: GH is not installed"
+		echo "Please install it from:"
+		echo "https://cli.github.com/"
+		return 1
 	fi	
 }
 
-# Check if gh is authenticated with a GitHub account.
+# Check if gh is authenticated with a GitHub account
+# Outputs:
+# 		GH is authenticated with GitHub
+#		or Gh isnt authenticated and prompts user to login
 isGitAuth(){
-	# Get git auth status, discard output, and get exit code
     if gh auth status >/dev/null 2>&1; then
 		echo "GH is authenticated with GitHub."
     else
 		echo "GH is not authenticated with GitHub."
-
-        # Ask the user if they want to log in.
         read -p "Would you like to log in now? (Y/N): " choice
-
-        # Check if the user entered y or Y.
+		
         if [[ "$choice" =~ ^[Yy]$ ]]; then
             gh auth login
         fi
@@ -61,10 +62,11 @@ echo "$USERNAME is an owner of the $ORGANIZATION"
 
 # Main
 
-# if git is intalled run git authenticator
-if isGitInstalled; then
-    isGitAuth
+# if git isnt installed exit
+if ! isGitInstalled; then 
+	exit 1
 fi
+isGitAuth
 
 # calls checkOrganizationOwnership
 echo "Which org are you checking for? "
