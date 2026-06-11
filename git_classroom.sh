@@ -40,7 +40,6 @@ isGitAuth(){
 #		ORGANIZATION - GitHub organization
 # Outputs:
 # 		Prints message whether the user is an owner of specified organization
-
 checkOrganizationOwnership() {
 	USERNAME=$(gh api user --jq '.login')
 	ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
@@ -58,6 +57,35 @@ checkOrganizationOwnership() {
 	echo "$USERNAME is an owner of the $ORGANIZATION"
 }
 
+# Determines the current term based on the current month and year
+# Inputs:
+#		Current month and year
+# Outputs:
+#		TERM variable is set to the current term in the format of fYY,
+#		sYY, or suYY
+getCurrentTerm() {
+    local MONTH=$(date +%m)
+    local YEAR=$(date +%y)
+
+	# if the months are between july and november,
+	# the term is fall of the current year
+    if (( MONTH >= 7 && MONTH <= 11 )); then
+        TERM="f${YEAR}"
+    # if the month is decermber,
+	# the term is spring of the next year
+	elif (( MONTH == 12 )); then
+        TERM="s$(printf "%02d" $((10#$YEAR + 1)))"
+    # if the month is between january and march,
+	# the term is spring of the current year
+	elif (( MONTH <= 3 )); then
+        TERM="s${YEAR}"
+    # if the month is between april and june,
+	# the term is summer of the current year
+	else
+        TERM="su${YEAR}"
+    fi
+}
+
 
 # Main
 
@@ -67,6 +95,8 @@ if ! isGitInstalled; then
 fi
 isGitAuth
 
+getCurrentTerm
+echo "Current term is: $TERM"
 
 while getopts ":h?O:" opt; do
     case $opt in
