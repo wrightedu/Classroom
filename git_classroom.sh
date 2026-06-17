@@ -112,6 +112,11 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
+# Allows the user to select a template repository from the specified GitHub organization
+# Inputs:
+#		ORGANIZATION - the GitHub organization to search for template repositories
+# Outputs:
+#		TEMPLATE_REPO variable is set to the name of the selected template repository
 selectTemplateRepo(){
     local templates=()
 
