@@ -64,7 +64,21 @@ checkOrganizationOwnership() {
 # Outputs:
 #       Prints whether the username is valid
 isValidGitUser(){
+	local USERNAME="$1"
+	
+    if [ -z "$USERNAME" ]; then
+        echo "Error: No GitHub username provided."
+        return 1
+    fi
 
+    # Check if the GitHub user exists
+    if gh api "users/$USERNAME" >/dev/null 2>&1; then
+        echo "GitHub user '$USERNAME' is valid."
+        return 0
+    else
+        echo "GitHub user '$USERNAME' does not exist."
+        return 1
+    fi
 }
 
 
@@ -83,13 +97,20 @@ while getopts ":h?O:U:" opt; do
             echo "Usage: $0 [-h] [-O organization]"
             echo "  -h                Show this help message and exit"
             echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
-	    echo "  -U username       Verify that a GitHub username exists"
+	    	echo "  -U username       Verify that a GitHub username exists"
             exit 0
             ;;
         O)
 			ORGANIZATION="$OPTARG"
             checkOrganizationOwnership "$OPTARG"
             exit 0:
+            ;;
+
+		U)
+            USERNAME="$OPTARG"
+            if ! isValidGitUser "$USERNAME"; then
+                exit 1
+            fi
             ;;
     esac
 done
