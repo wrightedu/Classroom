@@ -35,6 +35,19 @@ isGitAuth(){
     fi
 }
 
+# Displays usage information for the script
+# Inputs:
+#		None
+# Outputs:
+#		Prints usage information and exits the script
+usage() {
+    echo "Usage: $0 [-h] [-O organization] [-A assignment]"
+    echo "  -h                Show this help message and exit"
+    echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
+    echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
+    exit 0
+}
+
 # Verifies that the authenticated GitHub user is an owner of the specified GitHub organization
 # Input:
 #		ORGANIZATION - GitHub organization
@@ -107,14 +120,15 @@ if ! isGitInstalled; then
 fi
 isGitAuth
 
+if [ $# -eq 0 ]; then
+    echo "No arguments provided."
+    usage
+fi
 
 while getopts ":h?O:A:" opt; do
     case $opt in
         h|\?)
-            echo "Usage: $0 [-h] [-O organization] [-A assignment]"
-            echo "  -h                Show this help message and exit"
-            echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
-            echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
+            usage
             ;;
         O)
 			ORGANIZATION="$OPTARG"
