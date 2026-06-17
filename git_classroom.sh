@@ -61,30 +61,26 @@ checkOrganizationOwnership() {
 # Inputs:
 #		Current month and year obtained from the system date
 # Outputs:
-#		TERM variable is set to the current term in the format of fYY,
-#		sYY, or suYY
+#		CURRENT_TERM variable is set to the current term in the format of fYY,
 getCurrentTerm() {
     local MONTH
     MONTH=$(date +%m)
     local YEAR
     YEAR=$(date +%y)
 
-	# if the months are between July and November,
-	# the term is fall of the current year
-    if (( "$MONTH" >= 7 && "$MONTH" <= 11 )); then
-        TERM="f${YEAR}"
-    # if the month is December,
-	# the term is spring of the next year
-	elif (( "$MONTH" == 12 )); then
-        TERM="s$(printf "%02d" "$((10#$YEAR + 1))")"
-    # if the month is between January and March,
-	# the term is spring of the current year
-	elif (( "$MONTH" <= 3 )); then
-        TERM="s${YEAR}"
-    # if the month is between April and June,
-	# the term is summer of the current year
-	else
-        TERM="su${YEAR}"
+    # if the month is between July and November, 
+    # the term is Fall 
+    if (( MONTH >= 7 && MONTH <= 11 )); then
+        CURRENT_TERM="f${YEAR}"
+    # if the month is December, the term is Spring of the next year
+    elif (( MONTH == 12 )); then
+        CURRENT_TERM="s$(printf "%02d" "$((10#$YEAR + 1))")"
+    # if the month is between January and March, the term is Spring
+    elif (( MONTH <= 3 )); then
+        CURRENT_TERM="s${YEAR}"
+    # if the month is between April and June, the term is Summer
+    else
+        CURRENT_TERM="su${YEAR}"
     fi
 }
 
@@ -92,7 +88,7 @@ getCurrentTerm() {
 # Inputs:
 #		ASSIGNMENT - the name of the assignment
 #		USERNAME - the GitHub username of the authenticated user
-#		TERM - the current term determined by getCurrentTerm function
+#		CURRENT_TERM - the current term determined by the getCurrentTerm function
 # Outputs:
 #		REPO_NAME variable is set to the generated repository name in the format of assignment-username-term
 generateRepoName() {
@@ -119,18 +115,17 @@ while getopts ":h?O:A:" opt; do
             echo "  -h                Show this help message and exit"
             echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
             echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
-            exit 0
             ;;
         O)
 			ORGANIZATION="$OPTARG"
             checkOrganizationOwnership "$OPTARG"
-            exit 0
             ;;
         A)
             ASSIGNMENT="$OPTARG"
             USERNAME=$(gh api user --jq '.login')
-            generateRepoName "$ASSIGNMENT" "$USERNAME" "$TERM"
+            getCurrentTerm
+            generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             echo "Generated repository name: $REPO_NAME"
-            ;;
+    ;;
     esac
 done
