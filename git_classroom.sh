@@ -45,6 +45,7 @@ usage() {
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
+    echo "  -T                Select a template repository from the specified GitHub organization"
     exit 0
 }
 
@@ -171,7 +172,7 @@ if [ $# -eq 0 ]; then
     usage
 fi
 
-while getopts ":h?O:A:" opt; do
+while getopts ":h?O:A:T" opt; do
     case $opt in
         h|\?)
             usage
@@ -186,6 +187,9 @@ while getopts ":h?O:A:" opt; do
             getCurrentTerm
             generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             echo "Generated repository name: $REPO_NAME"
-    ;;
+            ;;
+        T)
+            USE_TEMPLATE=true
+            ;;
     esac
 done
