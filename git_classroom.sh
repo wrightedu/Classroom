@@ -127,11 +127,11 @@ selectTemplateRepo(){
     while IFS= read -r repo; do
         templates+=("$repo")
     done < <(
-        gh repo list "ORGANIZATION" \
-            -- limit 100 \
+        gh repo list "$ORGANIZATION" \
+            --limit 100 \
             --json name \
             --jq '.[].name' \
-            | grep "template"
+            | grep -i "template"
     )
 
     # if the templates array is empty, print a message and exit the script
@@ -199,3 +199,13 @@ while getopts ":h?O:A:T" opt; do
             ;;
     esac
 done
+
+if [ "$USE_TEMPLATE" = true ]; then
+
+    if [ -z "$ORGANIZATION" ]; then
+        echo "Error: -T requires an organization specified with -O."
+        exit 1
+    fi
+
+    selectTemplateRepo
+fi
