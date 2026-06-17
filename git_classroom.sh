@@ -120,6 +120,7 @@ if ! isGitInstalled; then
 fi
 isGitAuth
 
+# if no arguments are provided, display usage information and exit
 if [ $# -eq 0 ]; then
     echo "No arguments provided."
     usage
