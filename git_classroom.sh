@@ -121,6 +121,9 @@ generateRepoName() {
 selectTemplateRepo(){
     local templates=()
 
+    # while loop to read the template repositories from the specified 
+    # GitHub organization and store them in an array and filter them using grep to only 
+    # include repositories with "template" in their name
     while IFS= read -r repo; do
         templates+=("$repo")
     done < <(
@@ -131,6 +134,7 @@ selectTemplateRepo(){
             | grep "template"
     )
 
+    # if the templates array is empty, print a message and exit the script
     if [ ${#templates[@]} -eq 0 ]; then
         echo "No template repositories found in the $ORGANIZATION."
         exit 1
@@ -139,6 +143,7 @@ selectTemplateRepo(){
     echo "Available template repositories in $ORGANIZATION:"
     echo
 
+    # for each repository in the templates array, print its index and name
     for i in "${!templates[@]}"; do
         echo "$((i + 1)). ${templates[i]}"
     done
@@ -146,6 +151,7 @@ selectTemplateRepo(){
     echo 
     read -p "Select a template repository by number: " choice
 
+    # if the user's choice is not a valid number or is out of range, print an error message and exit the script
     if ! [[ "$choice" =~ ^[1-9][0-9]*$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#templates[@]} ]; then
         echo "Invalid selection. Please enter a number between 1 and ${#templates[@]}."
         exit 1
