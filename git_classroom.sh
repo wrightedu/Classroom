@@ -58,6 +58,15 @@ checkOrganizationOwnership() {
 	echo "$USERNAME is an owner of the $ORGANIZATION"
 }
 
+# Verifies that a GitHub username exists
+# Input:
+#       GitHub username
+# Outputs:
+#       Prints whether the username is valid
+isValidGitUser(){
+
+}
+
 
 # Main
 
@@ -68,18 +77,19 @@ fi
 isGitAuth
 
 
-while getopts ":h?O:" opt; do
+while getopts ":h?O:U:" opt; do
     case $opt in
         h|\?)
             echo "Usage: $0 [-h] [-O organization]"
             echo "  -h                Show this help message and exit"
             echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
+	    echo "  -U username       Verify that a GitHub username exists"
             exit 0
             ;;
         O)
 			ORGANIZATION="$OPTARG"
             checkOrganizationOwnership "$OPTARG"
-            exit 0
+            exit 0:
             ;;
     esac
 done
