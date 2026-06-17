@@ -112,7 +112,47 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
+selectTemplateRepo(){
+    local templates=()
+
+    while IFS= read -r repo; do
+        templates+=("$repo")
+    done < <(
+        gh repo list "ORGANIZATION" \
+            -- limit 100 \
+            --json name \
+            --jq '.[].name' \
+            | grep "template"
+    )
+
+    if [ ${#templates[@]} -eq 0 ]; then
+        echo "No template repositories found in the $ORGANIZATION."
+        exit 1
+    fi
+
+    echo "Available template repositories in $ORGANIZATION:"
+    echo
+
+    for i in "${!templates[@]}"; do
+        echo "$((i + 1)). ${templates[i]}"
+    done
+
+    echo 
+    read -p "Select a template repository by number: " choice
+
+    if ! [[ "$choice" =~ ^[1-9][0-9]*$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#templates[@]} ]; then
+        echo "Invalid selection. Please enter a number between 1 and ${#templates[@]}."
+        exit 1
+    fi
+
+    TEMPLATE_REPO="${templates[$((choice - 1))]}"
+
+    echo "Selected template repository: $TEMPLATE_REPO"
+}
+
 # Main
+USE_TEMPLATE=false
+TEMPLATE_REPO=""
 
 # if git is intalled run git authenticator
 if ! isGitInstalled; then
