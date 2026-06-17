@@ -200,8 +200,11 @@ while getopts ":h?O:A:T" opt; do
     esac
 done
 
+# if the -T flag is set, check if the -O flag is also set and prompt the user 
+# to select a template repository from the specified GitHub organization
 if [ "$USE_TEMPLATE" = true ]; then
 
+    # if the -T flag is set but the -O flag is not set, print an error message and exit the script
     if [ -z "$ORGANIZATION" ]; then
         echo "Error: -T requires an organization specified with -O."
         exit 1
