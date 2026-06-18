@@ -45,7 +45,7 @@ usage() {
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
-    echo "  -T                Select a template repository from the specified GitHub organization"
+    echo "  -T template-repo  Template repository to use when creating a new repository (requires -O)"
     exit 0
 }
 
@@ -113,57 +113,22 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
-# Allows the user to select a template repository from the specified GitHub organization
+# Validates that the specified template repository exists and is accessible
 # Inputs:
-#		ORGANIZATION - the GitHub organization to search for template repositories
+#		TEMPLATE_REPO - the name of the template repository specified by the user
 # Outputs:
-#		TEMPLATE_REPO variable is set to the name of the selected template repository
-selectTemplateRepo(){
-    local templates=()
-
-    # while loop to read the template repositories from the specified 
-    # GitHub organization and store them in an array and filter them using grep to only 
-    # include repositories with "template" in their name
-    while IFS= read -r repo; do
-        templates+=("$repo")
-    done < <(
-        gh repo list "$ORGANIZATION" \
-            --limit 100 \
-            --json name \
-            --jq '.[].name' \
-            | grep -i "template"
-    )
-
-    # if the templates array is empty, print a message and exit the script
-    if [ ${#templates[@]} -eq 0 ]; then
-        echo "No template repositories found in the $ORGANIZATION."
+#		Prints message whether the template repository is valid or not
+validateTemplateRepo() {
+    if ! gh repo view "$TEMPLATE_REPO" >/dev/null 2>&1; then
+        echo "Error: Template repository '$TEMPLATE_REPO' does not exist or is not accessible."
         exit 1
     fi
 
-    echo "Available template repositories in $ORGANIZATION:"
-    echo
-
-    # for each repository in the templates array, print its index and name
-    for i in "${!templates[@]}"; do
-        echo "$((i + 1)). ${templates[i]}"
-    done
-
-    echo 
-    read -p "Select a template repository by number: " choice
-
-    # if the user's choice is not a valid number or is out of range, print an error message and exit the script
-    if ! [[ "$choice" =~ ^[1-9][0-9]*$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#templates[@]} ]; then
-        echo "Invalid selection. Please enter a number between 1 and ${#templates[@]}."
-        exit 1
-    fi
-
-    TEMPLATE_REPO="${templates[$((choice - 1))]}"
-
-    echo "Selected template repository: $TEMPLATE_REPO"
+    echo "Using template repository: $TEMPLATE_REPO"
 }
 
+
 # Main
-USE_TEMPLATE=false
 TEMPLATE_REPO=""
 
 # if git is intalled run git authenticator
@@ -178,7 +143,7 @@ if [ $# -eq 0 ]; then
     usage
 fi
 
-while getopts ":h?O:A:T" opt; do
+while getopts ":h?O:A:T:" opt; do
     case $opt in
         h|\?)
             usage
@@ -195,20 +160,12 @@ while getopts ":h?O:A:T" opt; do
             echo "Generated repository name: $REPO_NAME"
             ;;
         T)
-            USE_TEMPLATE=true
+            TEMPLATE_REPO="$OPTARG"
+            echo "Template repository: $TEMPLATE_REPO"
             ;;
     esac
 done
 
-# if the -T flag is set, check if the -O flag is also set and prompt the user 
-# to select a template repository from the specified GitHub organization
-if [ "$USE_TEMPLATE" = true ]; then
-
-    # if the -T flag is set but the -O flag is not set, print an error message and exit the script
-    if [ -z "$ORGANIZATION" ]; then
-        echo "Error: -T requires an organization specified with -O."
-        exit 1
-    fi
-
-    selectTemplateRepo
+if [ -n "$TEMPLATE_REPO" ]; then
+    validateTemplateRepo
 fi
