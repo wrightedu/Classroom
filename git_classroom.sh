@@ -45,7 +45,7 @@ usage() {
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
-    echo "  -T template-repo  Template repository to use when creating a new repository (requires -O)"
+    echo "  -T template-repo  Template repository to use when creating a new repository"
     exit 0
 }
 
