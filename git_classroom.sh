@@ -262,18 +262,6 @@ processRoster() {
 # Main
 ###################################################
 
-# if git is intalled run git authenticator
-if ! isGitInstalled; then
-	exit 1
-fi
-isGitAuth
-
-# if no arguments are provided, display usage information and exit
-if [ $# -eq 0 ]; then
-    echo "No arguments provided."
-    usage
-fi
-
 # process the command line arguments
 while getopts ":h?O:A:" opt; do
     case $opt in
@@ -293,6 +281,19 @@ while getopts ":h?O:A:" opt; do
     ;;
     esac
 done
+
+# if git is intalled run git authenticator
+if ! isGitInstalled; then
+	exit 1
+fi
+isGitAuth
+
+# if no arguments are provided, display usage information and exit
+if [ $# -eq 0 ]; then
+    echo "No arguments provided."
+    usage
+fi
+
 
 # make sure both an organization and assignment were provided
 if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" ]]; then
