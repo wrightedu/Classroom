@@ -97,7 +97,7 @@ checkRoster(){
 	local username="$1"
 
     USER_ROLE=$(awk -F',' -v user="$username" '
-        NR>1 && $2==user {print $3}
+        NR>1 && $2==user {gsub(/\r/, "", $3); print $3}
     ' "$CSV_FILE")
 
     [[ -n "$USER_ROLE" ]]
