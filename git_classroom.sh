@@ -143,13 +143,13 @@ createStudentRepo() {
 
     echo "Creating student repository $REPO_NAME"
 
-    gh repo create "$ORGANIZATION/$REPO_NAME" --private
+    gh repo create "$ORGANIZATION/$REPO_NAME" --private </dev/null
 
     # Give the student write access
     gh api \
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
-        -f permission="push"
+        -f permission="push" </dev/null
 }
 
 #! How are we formatting TA Repo's/ Do they even need repos
@@ -167,13 +167,13 @@ createTARepo() {
 
     echo "Creating TA repository $REPO_NAME"
 
-    gh repo create "$ORGANIZATION/$REPO_NAME" --private
+    gh repo create "$ORGANIZATION/$REPO_NAME" --private </dev/null
 
     # Give the TA write access to their own repository
     gh api \
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
-        -f permission="push"
+        -f permission="push" </dev/null
 }
 
 # Gives TA's read access to every student's repo
@@ -195,7 +195,7 @@ grantTAAccess() {
     gh api \
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$TA" \
-        -f permission="pull"
+        -f permission="pull" </dev/null
 }
 
 # Processes the class roster and creates repos
@@ -209,14 +209,18 @@ processRoster() {
     TAS=()
     STUDENTS=()
 
-    while IFS=',' read -r NAME USERNAME ROLE
+    # while IFS=',' read -r NAME USERNAME ROLE
+	while IFS=',' read -r NAME USERNAME ROLE || [[ -n "$NAME" ]]
     do
 
         # Skip header
         [[ "$NAME" == "Name" ]] && continue
 
         # Remove Windows carriage return if present
-        ROLE=$(echo "$ROLE" | tr -d '\r')
+        # ROLE=$(echo "$ROLE" | tr -d '\r')
+		NAME=${NAME//$'\r'/}
+		USERNAME=${USERNAME//$'\r'/}
+		ROLE=${ROLE//$'\r'/}
 
         if ! isGitHubUserValid "$USERNAME"; then
             echo "Skipping invalid GitHub username: $USERNAME"
@@ -262,6 +266,12 @@ processRoster() {
 # Main
 ###################################################
 
+# if git is intalled run git authenticator
+if ! isGitInstalled; then
+	exit 1
+fi
+isGitAuth
+
 # process the command line arguments
 while getopts ":h?O:A:" opt; do
     case $opt in
@@ -282,18 +292,11 @@ while getopts ":h?O:A:" opt; do
     esac
 done
 
-# if git is intalled run git authenticator
-if ! isGitInstalled; then
-	exit 1
-fi
-isGitAuth
-
 # if no arguments are provided, display usage information and exit
 if [ $# -eq 0 ]; then
     echo "No arguments provided."
     usage
 fi
-
 
 # make sure both an organization and assignment were provided
 if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" ]]; then
