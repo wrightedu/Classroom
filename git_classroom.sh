@@ -1,5 +1,8 @@
 #!/bin/bash
 
+CSV_FILE="classRoster.csv"
+USER_ROLE=""
+
 # Verifies that GH is installed.
 # Outputs:
 # 		GH is installed
@@ -70,6 +73,76 @@ checkOrganizationOwnership() {
 	echo "$USERNAME is an owner of the $ORGANIZATION"
 }
 
+# Makes sure the github username exists
+# Input:
+#		Github Username
+# Outputs:
+#		Returns 0 if valid, 1 otherwise
+isGitHubUserValid(){
+	local username="$1"
+
+    if gh api "users/$username" >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Checks whether the GitHub username exists in the class roster
+# Inputs:
+#       GitHub username
+# Outputs:
+#       Sets USER_ROLE if found
+checkRoster(){
+	local username="$1"
+
+    USER_ROLE=$(awk -F',' -v user="$username" '
+        NR>1 && $2==user {print $3}
+    ' "$CSV_FILE")
+
+    [[ -n "$USER_ROLE" ]]
+}
+
+# Validates that the GitHub account exists and belongs to the class
+validateUser(){
+	read -p "Enter GitHub username: " USERNAME
+
+    # Check GitHub
+    if ! isGitHubUserValid "$USERNAME"; then
+        echo "Error: '$USERNAME' is not a valid GitHub username."
+        exit 1
+    fi
+
+    # Check roster
+    if ! checkRoster "$USERNAME"; then
+        echo "Error: '$USERNAME' is not listed in the class roster."
+        exit 1
+    fi
+
+    echo "GitHub username verified."
+    echo "Role: $USER_ROLE"
+
+    case "$USER_ROLE" in
+
+        Student)
+            echo "Permissions: Student"
+            ;;
+
+        TA)
+            echo "Permissions: Student + TA"
+            ;;
+
+        Teacher)
+            echo "Permissions: Teacher"
+            ;;
+
+        *)
+            echo "Unknown role."
+            exit 1
+            ;;
+    esac
+}
+
 # Determines the current term based on the current month and year
 # Inputs:
 #		Current month and year obtained from the system date
@@ -112,13 +185,15 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
-# Main
+# Main -----------------------------------------------------------------------------------------------------
 
 # if git is intalled run git authenticator
 if ! isGitInstalled; then
 	exit 1
 fi
 isGitAuth
+
+validateUser
 
 # if no arguments are provided, display usage information and exit
 if [ $# -eq 0 ]; then
