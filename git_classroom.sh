@@ -1,13 +1,12 @@
 #!/bin/bash
 
 CSV_FILE="classRoster.csv"
-USER_ROLE=""
 
 # Verifies that GH is installed.
 # Outputs:
 # 		GH is installed
 #		or an error message that prompts user to install it
-isGitInstalled(){
+isGitInstalled() {
 	if gh --version >/dev/null 2>&1; then
 		echo "GH is installed."
 		return 0
@@ -25,7 +24,7 @@ isGitInstalled(){
 # Outputs:
 # 		GH is authenticated with GitHub
 #		or Gh isnt authenticated and prompts user to login
-isGitAuth(){
+isGitAuth() {
     if gh auth status >/dev/null 2>&1; then
 		echo "GH is authenticated with GitHub."
     else
@@ -78,7 +77,7 @@ checkOrganizationOwnership() {
 #		Github Username
 # Outputs:
 #		Returns 0 if valid, 1 otherwise
-isGitHubUserValid(){
+isGitHubUserValid() {
 	local username="$1"
 
     if gh api "users/$username" >/dev/null 2>&1; then
@@ -86,61 +85,6 @@ isGitHubUserValid(){
     else
         return 1
     fi
-}
-
-# Checks whether the GitHub username exists in the class roster
-# Inputs:
-#       GitHub username
-# Outputs:
-#       Sets USER_ROLE if found
-checkRoster(){
-	local username="$1"
-
-    USER_ROLE=$(awk -F',' -v user="$username" '
-        NR>1 && $2==user {gsub(/\r/, "", $3); print $3}
-    ' "$CSV_FILE")
-
-    [[ -n "$USER_ROLE" ]]
-}
-
-# Validates that the GitHub account exists and belongs to the class
-validateUser(){
-	read -p "Enter GitHub username: " USERNAME
-
-    # Check GitHub
-    if ! isGitHubUserValid "$USERNAME"; then
-        echo "Error: '$USERNAME' is not a valid GitHub username."
-        exit 1
-    fi
-
-    # Check roster
-    if ! checkRoster "$USERNAME"; then
-        echo "Error: '$USERNAME' is not listed in the class roster."
-        exit 1
-    fi
-
-    echo "GitHub username verified."
-    echo "Role: $USER_ROLE"
-
-    case "$USER_ROLE" in
-
-        Student)
-            echo "Permissions: Student"
-            ;;
-
-        TA)
-            echo "Permissions: Student + TA"
-            ;;
-
-        Teacher)
-            echo "Permissions: Teacher"
-            ;;
-
-        *)
-            echo "Unknown role."
-            exit 1
-            ;;
-    esac
 }
 
 # Determines the current term based on the current month and year
@@ -185,7 +129,138 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
-# Main -----------------------------------------------------------------------------------------------------
+# Creates a private repo for a student
+# Inputs:
+#       USERNAME - GitHub username of the student
+# Outputs:
+#       Creates a private repository and grants the student write access
+createStudentRepo() {
+
+    local USERNAME="$1"
+
+    getCurrentTerm
+    generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+
+    echo "Creating student repository $REPO_NAME"
+
+    gh repo create "$ORGANIZATION/$REPO_NAME" --private
+
+    # Give the student write access
+    gh api \
+        -X PUT \
+        "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
+        -f permission="push"
+}
+
+#! How are we formatting TA Repo's/ Do they even need repos
+# Creates a private repo for a TA
+# Inputs:
+#       USERNAME - GitHub username of the TA
+# Outputs:
+#       Creates a private repository and grants the TA write access
+createTARepo() {
+
+    local USERNAME="$1"
+
+    getCurrentTerm
+    generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+
+    echo "Creating TA repository $REPO_NAME"
+
+    gh repo create "$ORGANIZATION/$REPO_NAME" --private
+
+    # Give the TA write access to their own repository
+    gh api \
+        -X PUT \
+        "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
+        -f permission="push"
+}
+
+# Gives TA's read access to every student's repo
+# Inputs:
+#       TA - GitHub username of the TA
+#       STUDENT - GitHub username of the student
+# Outputs:
+#       Grants the TA read access to the student's repository
+grantTAAccess() {
+
+    local TA="$1"
+    local STUDENT="$2"
+
+    getCurrentTerm
+    generateRepoName "$ASSIGNMENT" "$STUDENT" "$CURRENT_TERM"
+
+    echo "Giving $TA read access to $REPO_NAME"
+
+    gh api \
+        -X PUT \
+        "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$TA" \
+        -f permission="pull"
+}
+
+# Processes the class roster and creates repos
+# Inputs:
+#       CSV_FILE - CSV file containing names, GitHub usernames, and roles
+# Outputs:
+#       Creates repos for students and TAs.
+#       Grants TAs read access to all student repos
+processRoster() {
+
+    TAS=()
+    STUDENTS=()
+
+    while IFS=',' read -r NAME USERNAME ROLE
+    do
+
+        # Skip header
+        [[ "$NAME" == "Name" ]] && continue
+
+        # Remove Windows carriage return if present
+        ROLE=$(echo "$ROLE" | tr -d '\r')
+
+        if ! isGitHubUserValid "$USERNAME"; then
+            echo "Skipping invalid GitHub username: $USERNAME"
+            continue
+        fi
+
+        case "$ROLE" in
+
+            Student)
+                STUDENTS+=("$USERNAME")
+                createStudentRepo "$USERNAME"
+                ;;
+
+            TA)
+                TAS+=("$USERNAME")
+                createTARepo "$USERNAME"
+                ;;
+
+            Teacher)
+                echo "$USERNAME is the instructor. No repository created."
+                ;;
+
+            *)
+                echo "Unknown role: $ROLE"
+                ;;
+        esac
+
+    done < "$CSV_FILE"
+
+    echo
+    echo "Granting TA access..."
+
+    for TA in "${TAS[@]}"
+    do
+        for STUDENT in "${STUDENTS[@]}"
+        do
+            grantTAAccess "$TA" "$STUDENT"
+        done
+    done
+}
+
+###################################################
+# Main
+###################################################
 
 # if git is intalled run git authenticator
 if ! isGitInstalled; then
@@ -193,14 +268,13 @@ if ! isGitInstalled; then
 fi
 isGitAuth
 
-validateUser
-
 # if no arguments are provided, display usage information and exit
 if [ $# -eq 0 ]; then
     echo "No arguments provided."
     usage
 fi
 
+# process the command line arguments
 while getopts ":h?O:A:" opt; do
     case $opt in
         h|\?)
@@ -212,11 +286,20 @@ while getopts ":h?O:A:" opt; do
             ;;
         A)
             ASSIGNMENT="$OPTARG"
-            USERNAME=$(gh api user --jq '.login')
-            getCurrentTerm
-            generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
-            echo "Generated repository name: $REPO_NAME"
+            # USERNAME=$(gh api user --jq '.login')
+			# getCurrentTerm
+            # generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+            # echo "Generated repository name: $REPO_NAME"
     ;;
     esac
 done
+
+# make sure both an organization and assignment were provided
+if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" ]]; then
+    echo "Error: Both -O and -A are required."
+    usage
+fi
+
+# process the class roster and create repositories
+processRoster
 
