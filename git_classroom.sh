@@ -273,6 +273,12 @@ fi
 isGitAuth
 
 # process the command line arguments
+# if no arguments are provided, display usage information and exit
+if [ $# -eq 0 ]; then
+    echo "No arguments provided."
+    usage
+fi
+
 while getopts ":h?O:A:" opt; do
     case $opt in
         h|\?)
@@ -285,9 +291,13 @@ while getopts ":h?O:A:" opt; do
         A)
             ASSIGNMENT="$OPTARG"
             # USERNAME=$(gh api user --jq '.login')
-			# getCurrentTerm
+			      # getCurrentTerm
             # generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             # echo "Generated repository name: $REPO_NAME"
+            USERNAME=$(gh api user --jq '.login')
+            getCurrentTerm
+            generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+            echo "Generated repository name: $REPO_NAME"
     ;;
     esac
 done
