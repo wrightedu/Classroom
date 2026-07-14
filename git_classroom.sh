@@ -138,8 +138,10 @@ generateRepoName() {
 #       Exits with an error message if the template repository does not exist
 checkTemplateExists() {
 
-    if ! gh repo view "$ORGANIZATION/$TEMPLATE" >/dev/null 2>&1; then
-        echo "Error: Template repository '$TEMPLATE' does not exist in organization '$ORGANIZATION'."
+    if gh repo view "$TEMPLATE" >/dev/null 2>&1; then
+        echo "Using template repository: $TEMPLATE"
+    else
+        echo "Error: Template repository '$TEMPLATE' was not found."
         exit 1
     fi
 }
