@@ -1,7 +1,5 @@
 #!/bin/bash
 
-CSV_FILE="classRoster.csv"
-
 # Verifies that GH is installed.
 # Outputs:
 # 		GH is installed
@@ -347,6 +345,13 @@ checkOrganizationOwnership
 
 # verify that the template repository exists
 checkTemplateExists
+# Asks for csv
+read -p "Enter the CSV filename: " CSV_FILE
+
+while [[ ! -f "$CSV_FILE" ]]; do
+    echo "Error: '$CSV_FILE' not found."
+    read -p "Please enter a valid CSV filename: " CSV_FILE
+done
 
 # process the class roster and create repositories
 processRoster
