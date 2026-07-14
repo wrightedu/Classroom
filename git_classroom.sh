@@ -43,7 +43,7 @@ isGitAuth() {
 # Outputs:
 #		Prints usage information and exits the script
 usage() {
-    echo "Usage: $0 [-h] [-O organization] [-A assignment]"
+    echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template]"
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
@@ -130,7 +130,7 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
-# Checks if the specified template repository exists in the organization
+# Checks if the specified template repository exists
 # Inputs:
 #       ORGANIZATION - GitHub organization
 #       TEMPLATE - Template repository name
