@@ -47,7 +47,6 @@ usage() {
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
-    echo "  -T template-repo  Template repository to use when creating a new repository"
     exit 0
 }
 
@@ -130,25 +129,6 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
-<<<<<<< HEAD
-# Validates that the specified template repository exists and is accessible
-# Inputs:
-#		TEMPLATE_REPO - the name of the template repository specified by the user
-# Outputs:
-#		Prints message whether the template repository is valid or not
-validateTemplateRepo() {
-    if ! gh repo view "$TEMPLATE_REPO" >/dev/null 2>&1; then
-        echo "Error: Template repository '$TEMPLATE_REPO' does not exist or is not accessible."
-        exit 1
-    fi
-
-    echo "Using template repository: $TEMPLATE_REPO"
-}
-
-
-# Main
-TEMPLATE_REPO=""
-=======
 # Creates a private repo for a student
 # Inputs:
 #       USERNAME - GitHub username of the student
@@ -285,7 +265,6 @@ processRoster() {
 ###################################################
 # Main
 ###################################################
->>>>>>> f069e10d63c3a494130ca5f4dd9524f13032fab1
 
 # if git is intalled run git authenticator
 if ! isGitInstalled; then
@@ -300,7 +279,7 @@ if [ $# -eq 0 ]; then
     usage
 fi
 
-while getopts ":h?O:A:T:" opt; do
+while getopts ":h?O:A:" opt; do
     case $opt in
         h|\?)
             usage
@@ -316,22 +295,14 @@ while getopts ":h?O:A:T:" opt; do
             # generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             # echo "Generated repository name: $REPO_NAME"
             USERNAME=$(gh api user --jq '.login')
+            
             getCurrentTerm
             generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             echo "Generated repository name: $REPO_NAME"
-            ;;
-        T)
-            TEMPLATE_REPO="$OPTARG"
-            echo "Template repository: $TEMPLATE_REPO"
-            ;;
+    ;;
     esac
 done
 
-<<<<<<< HEAD
-if [ -n "$TEMPLATE_REPO" ]; then
-    validateTemplateRepo
-fi
-=======
 # if no arguments are provided, display usage information and exit
 if [ $# -eq 0 ]; then
     echo "No arguments provided."
@@ -346,5 +317,3 @@ fi
 
 # process the class roster and create repositories
 processRoster
-
->>>>>>> f069e10d63c3a494130ca5f4dd9524f13032fab1
