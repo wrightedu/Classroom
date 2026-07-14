@@ -236,7 +236,7 @@ processRoster() {
 
             TA)
                 TAS+=("$USERNAME")
-                createTARepo "$USERNAME"
+                ## createTARepo "$USERNAME"
                 ;;
 
             Teacher)
