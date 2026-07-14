@@ -47,6 +47,7 @@ usage() {
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
+    echo "  -T template       Specify the template repository to use for creating new repositories"
     exit 0
 }
 
@@ -279,7 +280,7 @@ if [ $# -eq 0 ]; then
     usage
 fi
 
-while getopts ":h?O:A:" opt; do
+while getopts ":h?O:A:T:" opt; do
     case $opt in
         h|\?)
             usage
@@ -295,11 +296,14 @@ while getopts ":h?O:A:" opt; do
             # generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             # echo "Generated repository name: $REPO_NAME"
             USERNAME=$(gh api user --jq '.login')
-            
+
             getCurrentTerm
             generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             echo "Generated repository name: $REPO_NAME"
-    ;;
+            ;;
+        T)
+            TEMPLATE="$OPTARG"
+            ;;
     esac
 done
 
@@ -310,8 +314,8 @@ if [ $# -eq 0 ]; then
 fi
 
 # make sure both an organization and assignment were provided
-if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" ]]; then
-    echo "Error: Both -O and -A are required."
+if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" ]]; then
+    echo "Error: -O -A -T are required."
     usage
 fi
 
