@@ -130,6 +130,20 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
+# Checks if the specified template repository exists in the organization
+# Inputs:
+#       ORGANIZATION - GitHub organization
+#       TEMPLATE - Template repository name
+# Outputs:
+#       Exits with an error message if the template repository does not exist
+checkTemplateExists() {
+
+    if ! gh repo view "$ORGANIZATION/$TEMPLATE" >/dev/null 2>&1; then
+        echo "Error: Template repository '$TEMPLATE' does not exist in organization '$ORGANIZATION'."
+        exit 1
+    fi
+}
+
 # Creates a private repo for a student
 # Inputs:
 #       USERNAME - GitHub username of the student
@@ -287,7 +301,6 @@ while getopts ":h?O:A:T:" opt; do
             ;;
         O)
 			ORGANIZATION="$OPTARG"
-            checkOrganizationOwnership "$OPTARG"
             ;;
         A)
             ASSIGNMENT="$OPTARG"
@@ -304,6 +317,14 @@ while getopts ":h?O:A:T:" opt; do
         T)
             TEMPLATE="$OPTARG"
             ;;
+        :)
+            echo "Error: Option -$OPTARG requires an argument."
+            usage
+            ;;
+        *)
+            echo "Error: Invalid option -$OPTARG"
+            usage
+            ;;
     esac
 done
 
@@ -318,6 +339,12 @@ if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" ]]; then
     echo "Error: -O -A -T are required."
     usage
 fi
+
+# verify ownership of the organization
+checkOrganizationOwnership
+
+# verify that the template repository exists
+checkTemplateExists
 
 # process the class roster and create repositories
 processRoster
