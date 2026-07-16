@@ -128,20 +128,24 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
-# Checks if the specified template repository exists
+# Verifies that the specified template repository exists and is a template repository
 # Inputs:
-#       ORGANIZATION - GitHub organization
-#       TEMPLATE - Template repository name
+#		TEMPLATE - the name of the template repository
 # Outputs:
-#       Exits with an error message if the template repository does not exist
-checkTemplateExists() {
+#		Prints message whether the template repository exists and is a template repository
+checkTemplateRepo() {
 
-    if gh repo view "$TEMPLATE" >/dev/null 2>&1; then
-        echo "Using template repository: $TEMPLATE"
-    else
-        echo "Error: Template repository '$TEMPLATE' was not found."
+    if ! gh repo view "$TEMPLATE" >/dev/null 2>&1; then
+        echo "Error: Template repository '$TEMPLATE' does not exist."
         exit 1
     fi
+
+    if [[ "$(gh api "repos/$TEMPLATE" --jq '.is_template')" != "true" ]]; then
+        echo "Error: '$TEMPLATE' is not a template repository."
+        exit 1
+    fi
+
+    echo "Using template repository: $TEMPLATE"
 }
 
 # Creates a private repo for a student
@@ -158,7 +162,9 @@ createStudentRepo() {
 
     echo "Creating student repository $REPO_NAME"
 
-    gh repo create "$ORGANIZATION/$REPO_NAME" --private </dev/null
+    gh repo create "$ORGANIZATION/$REPO_NAME" \
+        --template "$TEMPLATE" \
+        --private </dev/null
 
     # Give the student write access
     gh api \
@@ -304,10 +310,6 @@ while getopts ":h?O:A:T:" opt; do
             ;;
         A)
             ASSIGNMENT="$OPTARG"
-            # USERNAME=$(gh api user --jq '.login')
-			      # getCurrentTerm
-            # generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
-            # echo "Generated repository name: $REPO_NAME"
             USERNAME=$(gh api user --jq '.login')
 
             getCurrentTerm
@@ -343,8 +345,9 @@ fi
 # verify ownership of the organization
 checkOrganizationOwnership
 
-# verify that the template repository exists
-checkTemplateExists
+# verify that the specified template repository exists and is a template repository
+checkTemplateRepo
+
 # Asks for csv
 read -p "Enter the CSV filename: " CSV_FILE
 
