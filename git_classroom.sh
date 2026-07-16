@@ -41,10 +41,11 @@ isGitAuth() {
 # Outputs:
 #		Prints usage information and exits the script
 usage() {
-    echo "Usage: $0 [-h] [-O organization] [-A assignment]"
+    echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template]"
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
+    echo "  -T template       Specify the template repository to use for creating new repositories"
     exit 0
 }
 
@@ -125,6 +126,22 @@ generateRepoName() {
     local TERM="$3"
 
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
+}
+
+# Checks if the specified template repository exists
+# Inputs:
+#       ORGANIZATION - GitHub organization
+#       TEMPLATE - Template repository name
+# Outputs:
+#       Exits with an error message if the template repository does not exist
+checkTemplateExists() {
+
+    if gh repo view "$TEMPLATE" >/dev/null 2>&1; then
+        echo "Using template repository: $TEMPLATE"
+    else
+        echo "Error: Template repository '$TEMPLATE' was not found."
+        exit 1
+    fi
 }
 
 # Creates a private repo for a student
@@ -277,14 +294,13 @@ if [ $# -eq 0 ]; then
     usage
 fi
 
-while getopts ":h?O:A:" opt; do
+while getopts ":h?O:A:T:" opt; do
     case $opt in
         h|\?)
             usage
             ;;
         O)
 			ORGANIZATION="$OPTARG"
-            checkOrganizationOwnership "$OPTARG"
             ;;
         A)
             ASSIGNMENT="$OPTARG"
@@ -293,10 +309,22 @@ while getopts ":h?O:A:" opt; do
             # generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             # echo "Generated repository name: $REPO_NAME"
             USERNAME=$(gh api user --jq '.login')
+
             getCurrentTerm
             generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
             echo "Generated repository name: $REPO_NAME"
-    ;;
+            ;;
+        T)
+            TEMPLATE="$OPTARG"
+            ;;
+        :)
+            echo "Error: Option -$OPTARG requires an argument."
+            usage
+            ;;
+        *)
+            echo "Error: Invalid option -$OPTARG"
+            usage
+            ;;
     esac
 done
 
@@ -307,11 +335,16 @@ if [ $# -eq 0 ]; then
 fi
 
 # make sure both an organization and assignment were provided
-if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" ]]; then
-    echo "Error: Both -O and -A are required."
+if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" ]]; then
+    echo "Error: -O -A -T are required."
     usage
 fi
 
+# verify ownership of the organization
+checkOrganizationOwnership
+
+# verify that the template repository exists
+checkTemplateExists
 # Asks for csv
 read -p "Enter the CSV filename: " CSV_FILE
 
@@ -322,4 +355,3 @@ done
 
 # process the class roster and create repositories
 processRoster
-
