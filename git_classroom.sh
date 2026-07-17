@@ -128,6 +128,52 @@ generateRepoName() {
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
 }
 
+# Allows the user to edit the generated repository name
+# Inputs:
+#		None
+# Outputs:
+#		Prompts the user to edit the repository name or continue with the current name
+editRepoName(){
+    while true
+    do
+        echo
+        echo "Would you like to edit the repository name? (y/n)"
+        echo "Current repository name: $REPO_NAME"
+        echo
+        echo "1. Assignment: $ASSIGNMENT"
+        echo "2. Term: $CURRENT_TERM"
+        echo "3. Use custom repository name"
+        echo "4. Continue with current repository name"
+        echo "5. Cancel and exit"
+        echo
+        read -p "Enter your choice (1-5): " choice
+
+        case $choice in
+            1)
+                read -p "Enter new assignment name: " ASSIGNMENT
+                generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+                ;;
+            2)
+                read -p "Enter new term (e.g., f24, s25, su25): " CURRENT_TERM
+                generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+                ;;
+            3)
+                read -p "Enter custom repository name: " REPO_NAME
+                ;;
+            4)
+                break
+                ;;
+            5)
+                echo "Exiting..."
+                exit 0
+                ;;
+            *)
+                echo "Invalid choice. Please enter a number between 1 and 5."
+                ;;
+        esac
+    done
+}
+
 # Verifies that the specified template repository exists and is a template repository
 # Inputs:
 #		TEMPLATE - the name of the template repository
@@ -330,12 +376,6 @@ while getopts ":h?O:A:T:" opt; do
     esac
 done
 
-# if no arguments are provided, display usage information and exit
-if [ $# -eq 0 ]; then
-    echo "No arguments provided."
-    usage
-fi
-
 # make sure both an organization and assignment were provided
 if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" ]]; then
     echo "Error: -O -A -T are required."
@@ -347,6 +387,9 @@ checkOrganizationOwnership
 
 # verify that the specified template repository exists and is a template repository
 checkTemplateRepo
+
+# allow the user to edit the generated repository name before creating any repositories
+editRepoName
 
 # Asks for csv
 read -p "Enter the CSV filename: " CSV_FILE
