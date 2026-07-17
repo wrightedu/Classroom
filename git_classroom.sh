@@ -41,11 +41,12 @@ isGitAuth() {
 # Outputs:
 #		Prints usage information and exits the script
 usage() {
-    echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template]"
+    echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
     echo "  -T template       Specify the template repository to use for creating new repositories"
+    echo "  -C csv_file       Specify the class roster CSV file"
     exit 0
 }
 
@@ -346,7 +347,7 @@ if [ $# -eq 0 ]; then
     usage
 fi
 
-while getopts ":h?O:A:T:" opt; do
+while getopts ":h?O:A:T:C:" opt; do
     case $opt in
         h|\?)
             usage
@@ -365,6 +366,9 @@ while getopts ":h?O:A:T:" opt; do
         T)
             TEMPLATE="$OPTARG"
             ;;
+        C)
+            CSV_FILE="$OPTARG"
+            ;;
         :)
             echo "Error: Option -$OPTARG requires an argument."
             usage
@@ -377,7 +381,7 @@ while getopts ":h?O:A:T:" opt; do
 done
 
 # make sure both an organization and assignment were provided
-if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" ]]; then
+if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
     echo "Error: -O -A -T are required."
     usage
 fi
@@ -391,13 +395,13 @@ checkTemplateRepo
 # allow the user to edit the generated repository name before creating any repositories
 editRepoName
 
-# Asks for csv
-read -p "Enter the CSV filename: " CSV_FILE
-
-while [[ ! -f "$CSV_FILE" ]]; do
-    echo "Error: '$CSV_FILE' not found."
-    read -p "Please enter a valid CSV filename: " CSV_FILE
-done
+# verify the CSV file exists
+if [[ ! -f "$CSV_FILE" ]]; then
+    echo "Error: CSV file '$CSV_FILE' not found."
+    exit 1
+else
+    echo "CSV file '$CSV_FILE' found."
+fi
 
 # process the class roster and create repositories
 processRoster
