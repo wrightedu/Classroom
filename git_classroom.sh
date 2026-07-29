@@ -330,6 +330,41 @@ processRoster() {
     done
 }
 
+# Clones the student repositories to a specified local directory
+# Inputs:
+#       STUDENTS - Array of student GitHub usernames
+#       CLONE_DIR - Directory to clone the repositories into
+# Outputs:
+#       Clones each student's repository into the specified local directory
+cloneRepositories() {
+
+    local CLONE_DIR
+
+    read -p "Enter the directory to clone student repositories into: " CLONE_DIR
+
+    if [[ ! -d "$CLONE_DIR" ]]; then
+        read -p "Directory does not exist. Create it? (Y/N): " CREATE
+
+        if [[ "$CREATE" =~ ^[Yy]$ ]]; then
+            mkdir -p "$CLONE_DIR"
+        else
+            echo "Skipping repository cloning."
+            return
+        fi
+    fi
+
+    for USERNAME in "${STUDENTS[@]}"
+    do
+        getCurrentTerm
+        generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+
+        echo "Cloning $REPO_NAME..."
+        gh repo clone "$ORGANIZATION/$REPO_NAME" "$CLONE_DIR/$REPO_NAME"
+    done
+
+    echo "Finished cloning student repositories."
+}
+
 ###################################################
 # Main
 ###################################################
@@ -405,3 +440,16 @@ fi
 
 # process the class roster and create repositories
 processRoster
+
+# allows the user to clone the student repositories to their local machine if they want
+echo
+read -p "Would you like to clone the student repositories to your local machine? (Y/N)" CLONE
+
+if [[ "$CLONE" =~ ^[Yy]$ ]]; then
+    cloneRepositories
+    echo "All repositories cloned."
+else
+    echo "Skipping repository cloning."
+fi
+
+echo "Completed"
