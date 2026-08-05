@@ -17,7 +17,7 @@ grantTAAccess() {
     gh api \
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$TA" \
-        -f permission="pull" </dev/null
+        -f permission="pull" >/dev/null </dev/null
 }
 
 # Creates a private repo for a student
@@ -42,7 +42,7 @@ createStudentRepo() {
     gh api \
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
-        -f permission="push" </dev/null
+        -f permission="push" >/dev/null </dev/null
 }
 
 #! How are we formatting TA Repo's/ Do they even need repos
@@ -60,11 +60,11 @@ createTARepo() {
 
     echo "Creating TA repository $REPO_NAME"
 
-    gh repo create "$ORGANIZATION/$REPO_NAME" --private </dev/null
+    gh repo create "$ORGANIZATION/$REPO_NAME" --private  >/dev/null </dev/null
 
     # Give the TA write access to their own repository
     gh api \
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
-        -f permission="push" </dev/null
+        -f permission="push" >/dev/null </dev/null
 }
