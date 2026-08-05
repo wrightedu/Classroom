@@ -93,22 +93,19 @@ isGitHubUserValid() {
 # Outputs:
 #		CURRENT_TERM variable is set to the current term in the format of fYY,
 getCurrentTerm() {
-    local MONTH
-    MONTH=$(date +%m)
-    local YEAR
-    YEAR=$(date +%y)
 
-    # if the month is between July and November, 
-    # the term is Fall 
+    local MONTH=$((10#$(date +%m)))
+    local YEAR=$((10#$(date +%y)))
+
+    # if the current month is between July and November, it's Fall term (fYY)
     if (( MONTH >= 7 && MONTH <= 11 )); then
         CURRENT_TERM="f${YEAR}"
-    # if the month is December, the term is Spring of the next year
+    # if the current month is December, it's Spring term of the next year (sYY)
     elif (( MONTH == 12 )); then
-        CURRENT_TERM="s$(printf "%02d" "$((10#$YEAR + 1))")"
-    # if the month is between January and March, the term is Spring
+        CURRENT_TERM="s$(printf "%02d" $((YEAR + 1)))"
+    # if the current month is between January and March, it's Spring term (sYY)
     elif (( MONTH <= 3 )); then
         CURRENT_TERM="s${YEAR}"
-    # if the month is between April and June, the term is Summer
     else
         CURRENT_TERM="su${YEAR}"
     fi
@@ -138,7 +135,7 @@ editRepoName(){
     while true
     do
         echo
-        echo "Would you like to edit the repository name? (y/n)"
+        echo "Would you like to edit the repository name?"
         echo "Current repository name: $REPO_NAME"
         echo
         echo "1. Assignment: $ASSIGNMENT"
@@ -297,7 +294,7 @@ cloneRepositories() {
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
-source "$SCRIPT_DIR/classroom_git_checks.sh"
+#source "$SCRIPT_DIR/classroom_git_checks.sh"
 source "$SCRIPT_DIR/classroom_helper.sh"
 
 classroom() {
@@ -386,3 +383,5 @@ fi
 
 echo "Completed"
 }
+
+classroom "$@"
