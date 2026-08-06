@@ -7,10 +7,13 @@
 grantTAAccess() {
 
     local TA="$1"
-    local STUDENT="$2"
+    local STUDENT_EMAIL="$2"
+
+    local EMAIL_ID
+    EMAIL_ID=$(generateEmailIdentifier "$STUDENT_EMAIL")
 
     getCurrentTerm
-    generateRepoName "$ASSIGNMENT" "$STUDENT" "$CURRENT_TERM"
+    generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
 
     echo "Giving $TA read access to $REPO_NAME"
 
@@ -27,22 +30,39 @@ grantTAAccess() {
 #       Creates a private repository and grants the student write access
 createStudentRepo() {
 
-    local USERNAME="$1"
+    local EMAIL="$1"
+    local USERNAME="$2"
+
+    local EMAIL_ID
+    EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
 
     getCurrentTerm
-    generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+    generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
 
     echo "Creating student repository $REPO_NAME"
 
     gh repo create "$ORGANIZATION/$REPO_NAME" \
         --template "$TEMPLATE" \
-        --private </dev/null
+        --private >/dev/null </dev/null
 
-    # Give the student write access
     gh api \
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
         -f permission="push" >/dev/null </dev/null
+}
+
+# Generates an identifier from an email address by extracting the part before the '@' symbol
+# Inputs:
+#       EMAIL - Email address of the student
+# Outputs:
+#       Returns the identifier (part before '@') of the email address
+generateEmailIdentifier() {
+
+    local EMAIL="$1"
+    local IDENTIFIER="${EMAIL%@*}"
+    IDENTIFIER="${IDENTIFIER//./}"
+
+    echo "$IDENTIFIER"
 }
 
 #! How are we formatting TA Repo's/ Do they even need repos
@@ -53,16 +73,20 @@ createStudentRepo() {
 #       Creates a private repository and grants the TA write access
 createTARepo() {
 
-    local USERNAME="$1"
+    local EMAIL="$1"
+    local USERNAME="$2"
+
+    local EMAIL_ID
+    EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
 
     getCurrentTerm
-    generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+    generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
 
     echo "Creating TA repository $REPO_NAME"
 
-    gh repo create "$ORGANIZATION/$REPO_NAME" --private  >/dev/null </dev/null
+    gh repo create "$ORGANIZATION/$REPO_NAME" \
+        --private >/dev/null </dev/null
 
-    # Give the TA write access to their own repository
     gh api \
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \

@@ -115,12 +115,13 @@ generateRepoName() {
 #		None
 # Outputs:
 #		Prompts the user to edit the repository name or continue with the current name
-editRepoName(){
+editRepoName() {
+
     while true
     do
         echo
         echo "Would you like to edit the repository name?"
-        echo "Current repository name: $REPO_NAME"
+        echo "Example repository name: $REPO_NAME"
         echo
         echo "1. Assignment: $ASSIGNMENT"
         echo "2. Term: $CURRENT_TERM"
@@ -128,16 +129,17 @@ editRepoName(){
         echo "4. Continue with current repository name"
         echo "5. Cancel and exit"
         echo
+
         read -p "Enter your choice (1-5): " choice
 
         case $choice in
             1)
                 read -p "Enter new assignment name: " ASSIGNMENT
-                generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+                REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
                 ;;
             2)
                 read -p "Enter new term (e.g., f24, s25, su25): " CURRENT_TERM
-                generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+                REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
                 ;;
             3)
                 read -p "Enter custom repository name: " REPO_NAME
@@ -186,19 +188,31 @@ processRoster() {
 
     TAS=()
     STUDENTS=()
+    USED_EMAIL_IDS=()
 
-	while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
+    while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
 
-        # Skip header
         [[ "$NAME" == "Name" ]] && continue
 
-        # Remove Windows carriage return if present
-        # ROLE=$(echo "$ROLE" | tr -d '\r')
-		NAME=${NAME//$'\r'/}
-		EMAIL=${EMAIL//$'\r'/}
-		ROLE=${ROLE//$'\r'/}
+        NAME=${NAME//$'\r'/}
+        EMAIL=${EMAIL//$'\r'/}
+        ROLE=${ROLE//$'\r'/}
         USERNAME=${USERNAME//$'\r'/}
+
+        EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+
+        for USED in "${USED_EMAIL_IDS[@]}"
+        do
+            if [[ "$USED" == "$EMAIL_ID" ]]; then
+                echo "Error: Duplicate repository identifier '$EMAIL_ID'."
+                exit 1
+            fi
+        done
+
+        USED_EMAIL_IDS+=("$EMAIL_ID")
+
+        EMAIL_IDS[$EMAIL_ID]="$EMAIL"
 
         if ! isGitHubUserValid "$USERNAME"; then
             echo "Skipping invalid GitHub username: $USERNAME"
@@ -208,16 +222,16 @@ processRoster() {
         case "$ROLE" in
 
             Student)
-                STUDENTS+=("$USERNAME")
-                createStudentRepo "$USERNAME"
+                STUDENTS+=("$EMAIL:$USERNAME")
+                createStudentRepo "$EMAIL" "$USERNAME"
                 ;;
 
             TA)
-                TAS+=("$USERNAME")
-                createTARepo "$USERNAME"
+                TAS+=("$EMAIL:$USERNAME")
+                createTARepo "$EMAIL" "$USERNAME"
                 ;;
 
-            Teacher)
+            Teacher | Instructor)
                 echo "$USERNAME is the instructor. No repository created."
                 ;;
 
@@ -233,9 +247,14 @@ processRoster() {
 
     for TA in "${TAS[@]}"
     do
+        TA_EMAIL="${TA%%:*}"
+        TA_USERNAME="${TA##*:}"
+
         for STUDENT in "${STUDENTS[@]}"
         do
-            grantTAAccess "$TA" "$STUDENT"
+            STUDENT_EMAIL="${STUDENT%%:*}"
+
+            grantTAAccess "$TA_USERNAME" "$STUDENT_EMAIL"
         done
     done
 }
@@ -263,10 +282,14 @@ cloneRepositories() {
         fi
     fi
 
-    for USERNAME in "${STUDENTS[@]}"
+    for STUDENT in "${STUDENTS[@]}"
     do
+        EMAIL="${STUDENT%%:*}"
+
+        EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+
         getCurrentTerm
-        generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+        generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
 
         echo "Cloning $REPO_NAME..."
         gh repo clone "$ORGANIZATION/$REPO_NAME" "$CLONE_DIR/$REPO_NAME"
