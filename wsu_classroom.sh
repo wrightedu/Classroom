@@ -44,10 +44,10 @@ while getopts ":h?O:A:T:C:" opt; do
             ;;
         A)
             ASSIGNMENT="$OPTARG"
-            USERNAME=$(gh api user --jq '.login')
 
             getCurrentTerm
-            generateRepoName "$ASSIGNMENT" "$USERNAME" "$CURRENT_TERM"
+            REPO_NAME="$ASSIGNMENT-email-$CURRENT_TERM"
+
             echo "Generated repository name: $REPO_NAME"
             ;;
         T)
