@@ -32,8 +32,9 @@ grantTAAccess() {
 #       Creates a private repository and grants the student write access
 createStudentRepo() {
 
-    local EMAIL="$1"
-    local USERNAME="$2"
+    local NAME="$1"
+    local EMAIL="$2"
+    local USERNAME="$3"
 
     local EMAIL_ID
     EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
@@ -52,23 +53,34 @@ createStudentRepo() {
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
         -f permission="push" >/dev/null </dev/null
 
-    GENERATED_REPO_LINKS+=("https://github.com/$ORGANIZATION/$REPO_NAME")
+    GENERATED_REPO_LINKS+=(
+        "$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
 }
 
 # Exports the generated repository links to a text file
 # Inputs:
 #       None
 # Outputs:
-#       Creates a text file containing the links to the generated repositories
+#       Creates a text file containing the links to the generated repositories in the format "Name,Repository Link" and sorts them alphabetically by name
 exportRepoLinks() {
-    local OUTPUT_FILE="${ASSIGNMENT}-${CURRENT_TERM}-repo-links.txt"
+    local OUTPUT_FILE="${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv"
 
     if [[ ${#GENERATED_REPO_LINKS[@]} -eq 0 ]]; then
         echo "No repositories were created. No links to export."
         return
     fi
 
-    printf "%s\n" "${GENERATED_REPO_LINKS[@]}" > "$OUTPUT_FILE"
+    echo "Name,Repository Link" > "$OUTPUT_FILE"
+
+    printf "%s\n" "${GENERATED_REPO_LINKS[@]}" \
+        | awk -F',' '{
+            split($1, name, " ")
+            print name[length(name)] "," $0
+        }' \
+        | sort -t',' -k1,1 \
+        | cut -d',' -f2- \
+        >> "$OUTPUT_FILE"
+
     echo "Repository links exported to $OUTPUT_FILE"
 }
 
