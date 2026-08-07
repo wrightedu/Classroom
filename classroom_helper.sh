@@ -1,3 +1,5 @@
+GENERATED_REPO_LINKS=()
+
 # Gives TA's read access to every student's repo
 # Inputs:
 #       TA - GitHub username of the TA
@@ -49,6 +51,25 @@ createStudentRepo() {
         -X PUT \
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
         -f permission="push" >/dev/null </dev/null
+
+    GENERATED_REPO_LINKS+=("https://github.com/$ORGANIZATION/$REPO_NAME")
+}
+
+# Exports the generated repository links to a text file
+# Inputs:
+#       None
+# Outputs:
+#       Creates a text file containing the links to the generated repositories
+exportRepoLinks() {
+    local OUTPUT_FILE="${ASSIGNMENT}-${CURRENT_TERM}-repo-links.txt"
+
+    if [[ ${#GENERATED_REPO_LINKS[@]} -eq 0 ]]; then
+        echo "No repositories were created. No links to export."
+        return
+    fi
+
+    printf "%s\n" "${GENERATED_REPO_LINKS[@]}" > "$OUTPUT_FILE"
+    echo "Repository links exported to $OUTPUT_FILE"
 }
 
 # Generates an identifier from an email address by extracting the part before the '@' symbol

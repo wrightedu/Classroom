@@ -103,6 +103,9 @@ fi
 # process the class roster and create repositories
 processRoster
 
+# creates file of student repo links for the instructor to use
+exportRepoLinks
+
 # allows the user to clone the student repositories to their local machine if they want
 echo
 read -p "Would you like to clone the student repositories to your local machine? (Y/N)" CLONE
