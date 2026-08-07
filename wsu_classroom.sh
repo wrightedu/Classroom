@@ -117,7 +117,7 @@ else
     echo "Skipping repository cloning."
 fi
 
-echo "Completed"
+configurationSummary
 }
 
 WSU_classroom "$@"
