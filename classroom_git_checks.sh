@@ -223,7 +223,7 @@ processRoster() {
 
             Student)
                 STUDENTS+=("$EMAIL:$USERNAME")
-                createStudentRepo "$EMAIL" "$USERNAME"
+                createStudentRepo "$NAME" "$EMAIL" "$USERNAME"
                 ;;
 
             TA)
