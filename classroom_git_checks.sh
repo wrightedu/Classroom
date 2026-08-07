@@ -228,7 +228,12 @@ processRoster() {
 
             TA)
                 TAS+=("$EMAIL:$USERNAME")
-                createTARepo "$EMAIL" "$USERNAME"
+
+                if [[ "$CREATE_TA_REPOS" =~ ^[Yy]$ ]]; then
+                    createTARepo "$EMAIL" "$USERNAME"
+                else
+                    echo "Skipping repository creation for TA: $USERNAME"
+                fi
                 ;;
 
             Teacher | Instructor)

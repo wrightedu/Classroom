@@ -90,6 +90,10 @@ else
     echo "CSV file '$CSV_FILE' found."
 fi
 
+echo
+read -p "Would you like to create repositories for the TAs? (Y/N)"
+CREATE_TA_REPOS="$REPLY"
+
 # process the class roster and create repositories
 processRoster
 
