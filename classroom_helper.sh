@@ -1,4 +1,5 @@
 GENERATED_REPO_LINKS=()
+SUCCESSFUL_REPOS=()
 
 # Gives TA's read access to every student's repo
 # Inputs:
@@ -27,9 +28,12 @@ grantTAAccess() {
 
 # Creates a private repo for a student
 # Inputs:
+#       NAME - Name of the student
+#       EMAIL - Email address of the student
 #       USERNAME - GitHub username of the student
 # Outputs:
 #       Creates a private repository and grants the student write access
+#       Adds the repository link to GENERATED_REPO_LINKS
 createStudentRepo() {
 
     local NAME="$1"
@@ -44,17 +48,23 @@ createStudentRepo() {
 
     echo "Creating student repository $REPO_NAME"
 
-    gh repo create "$ORGANIZATION/$REPO_NAME" \
+    if gh repo create "$ORGANIZATION/$REPO_NAME" \
         --template "$TEMPLATE" \
         --private >/dev/null </dev/null
+    then
+        ((SUCCESSFUL_REPOS++))
 
-    gh api \
-        -X PUT \
-        "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
-        -f permission="push" >/dev/null </dev/null
+        gh api \
+            -X PUT \
+            "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
+            -f permission="push" >/dev/null </dev/null
 
-    GENERATED_REPO_LINKS+=(
-        "$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
+        GENERATED_REPO_LINKS+=(
+            "$NAME,https://github.com/$ORGANIZATION/$REPO_NAME"
+        )
+    else
+        echo "Error: Failed to create repository $REPO_NAME"
+    fi
 }
 
 # Exports the generated repository links to a text file
@@ -141,4 +151,91 @@ hasTAs() {
     done < "$CSV_FILE"
 
     return 1
+}
+
+# Displays a summary of the configuration and results
+# Inputs:
+#       ORGANIZATION - GitHub organization
+#       ASSIGNMENT - Assignment name
+#       CURRENT_TERM - Current academic term
+#       TEMPLATE - Template repository
+#       CSV_FILE - Class roster CSV file
+#       CREATE_TA_REPOS - Whether TA repositories were created
+#       GRANT_TA_ACCESS - Whether TAs received access to student repositories
+#       SUCCESSFUL_REPOS - Number of successfully created student repositories
+# Outputs:
+#       Prints a summary of the configuration and results, including counts of students, TAs,
+configurationSummary() {
+
+    local STUDENT_COUNT=0
+    local TA_COUNT=0
+    local INSTRUCTOR_COUNT=0
+
+    INVALID_USERNAMES=()
+
+    while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
+    do
+        # Skip header
+        [[ "$NAME" == "Name" ]] && continue
+
+        NAME=${NAME//$'\r'/}
+        EMAIL=${EMAIL//$'\r'/}
+        ROLE=${ROLE//$'\r'/}
+        USERNAME=${USERNAME//$'\r'/}
+
+        # Count roles
+        case "$ROLE" in
+            Student)
+                ((STUDENT_COUNT++))
+                ;;
+            TA)
+                ((TA_COUNT++))
+                ;;
+            Teacher | Instructor)
+                ((INSTRUCTOR_COUNT++))
+                ;;
+        esac
+
+        # Check for invalid GitHub usernames
+        if ! isGitHubUserValid "$USERNAME"; then
+            INVALID_USERNAMES+=("$USERNAME")
+        fi
+
+    done < "$CSV_FILE"
+
+    echo
+    echo "========================================"
+    echo "        CONFIGURATION SUMMARY"
+    echo "========================================"
+    echo
+    echo "Organization:          $ORGANIZATION"
+    echo "Assignment:            $ASSIGNMENT"
+    echo "Term:                  $CURRENT_TERM"
+    echo "Template:              $TEMPLATE"
+    echo "Roster:                $CSV_FILE"
+    echo
+    echo "Students:              $STUDENT_COUNT"
+    echo "TAs:                   $TA_COUNT"
+    echo "Instructors:           $INSTRUCTOR_COUNT"
+    echo "Invalid usernames:     ${#INVALID_USERNAMES[@]}"
+    echo "Successful repos:      $SUCCESSFUL_REPOS"
+    echo
+    echo "Create TA repos:       $CREATE_TA_REPOS"
+    echo "Grant TA access:       $GRANT_TA_ACCESS"
+    echo
+    echo "Repository format:"
+    echo "  ${ASSIGNMENT}-<email-id>-${CURRENT_TERM}"
+
+    if [[ ${#INVALID_USERNAMES[@]} -gt 0 ]]; then
+        echo
+        echo "Invalid GitHub usernames:"
+
+        for USERNAME in "${INVALID_USERNAMES[@]}"
+        do
+            echo "  - $USERNAME"
+        done
+    fi
+
+    echo
+    echo "========================================"
 }
