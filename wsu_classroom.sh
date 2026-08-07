@@ -69,7 +69,7 @@ done
 
 # make sure both an organization and assignment were provided
 if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
-    echo "Error: -O -A -T are required."
+    echo "Error: -O -A -T -C are required."
     usage
 fi
 
@@ -88,6 +88,16 @@ if [[ ! -f "$CSV_FILE" ]]; then
     exit 1
 else
     echo "CSV file '$CSV_FILE' found."
+fi
+
+CREATE_TA_REPOS="N"
+GRANT_TA_ACCESS="N"
+
+if hasTAs; then
+    echo
+    read -p "Would you like to create repositories for TAs? (Y/N): " CREATE_TA_REPOS
+
+    read -p "Would you like to grant TAs access to student repositories? (Y/N): " GRANT_TA_ACCESS
 fi
 
 # process the class roster and create repositories

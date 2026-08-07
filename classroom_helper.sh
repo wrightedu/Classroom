@@ -92,3 +92,20 @@ createTARepo() {
         "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
         -f permission="push" >/dev/null </dev/null
 }
+
+# Checks if there are any TAs in the CSV file
+# Inputs:
+#       CSV_FILE - CSV file containing names, GitHub usernames, and roles
+# Outputs:
+#       Returns 0 if there are TAs, 1 otherwise
+hasTAs() {
+    while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
+    do
+        ROLE=${ROLE//$'\r'/}
+        if [[ "$ROLE" == "TA" ]]; then
+            return 0
+        fi
+    done < "$CSV_FILE"
+
+    return 1
+}

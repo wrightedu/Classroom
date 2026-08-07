@@ -228,7 +228,11 @@ processRoster() {
 
             TA)
                 TAS+=("$EMAIL:$USERNAME")
-                createTARepo "$EMAIL" "$USERNAME"
+                
+                # if the user wants to create TA repos, create one for the TAs
+                if [[ "$CREATE_TA_REPOS" =~ ^[Yy]$ ]]; then
+                    createTARepo "$EMAIL" "$USERNAME"
+                fi
                 ;;
 
             Teacher | Instructor)
@@ -242,21 +246,23 @@ processRoster() {
 
     done < "$CSV_FILE"
 
-    echo
-    echo "Granting TA access..."
+    if [[ "$GRANT_TA_ACCESS" =~ ^[Yy]$ ]]; then
 
-    for TA in "${TAS[@]}"
-    do
-        TA_EMAIL="${TA%%:*}"
-        TA_USERNAME="${TA##*:}"
+        echo
+        echo "Granting TA access..."
 
-        for STUDENT in "${STUDENTS[@]}"
+        for TA in "${TAS[@]}"
         do
-            STUDENT_EMAIL="${STUDENT%%:*}"
+            TA_USERNAME="${TA##*:}"
 
-            grantTAAccess "$TA_USERNAME" "$STUDENT_EMAIL"
+            for STUDENT in "${STUDENTS[@]}"
+            do
+                STUDENT_EMAIL="${STUDENT%%:*}"
+                grantTAAccess "$TA_USERNAME" "$STUDENT_EMAIL"
+            done
         done
-    done
+
+    fi
 }
 
 # Clones the student repositories to a specified local directory
