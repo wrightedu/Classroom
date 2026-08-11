@@ -71,6 +71,25 @@ Once configured, the `WSU_classroom` command will be available from the command 
 
 ## Usage
 
+Once WSU Classroom has been installed and configured, run the tool using the `WSU_classroom `command.
+
+```bash
+WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>
+```
+
+**Options**
+
+| Option | Description |
+| --- | --- |
+| `-h` | Displays the help message and exits. |
+| `-O` | Specifies the GitHub organization where repositories will be created. |
+| `-A` | Specifies the assignment name used when generating repository names. |
+| `-T` | Specifies the GitHub template repository used to create repositories. |
+| `-C` | Specifies the CSV file containing the class roster. |
+
+> [!IMPORTANT]  
+> The `-O`, `-A`, `-T`, and `-C` options are required.
+
 ### Comamnd-Line Options
 
 ### Example
