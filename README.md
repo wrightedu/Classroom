@@ -187,4 +187,129 @@ When WSU Classroom is run, the tool performs the following steps:
 
 ## Generated Output
 
+After WSU Classroom finishes processing the class roster, several outputs may be generated.
+
+### GitHub Repositories
+
+Private repositories are created for valid students in the specified GitHub organization. Each student is granted access to their assigned repository.
+
+If selected by the user, repositories may also be created for TAs and TAs may be granted read access to student repositories.
+
+### Repository Links CSV
+
+A CSV file containing the names of students and links to their generated repositories is automatically created.
+
+The file uses the following naming format:
+
+`<repo-name>-repo-links.csv`
+
+**For example:**
+
+`project-1-f26-repo-links.csv`
+
+The generated CSV uses the following format:
+
+```csv
+Name,Repository Link
+Jane Doe,https://github.com/organization/project-1-doe1-f26
+John Smith,https://github.com/organization/project-1-smith2-f26
+```
+
+Repository links are sorted alphabetically by the student's last name.
+
+### Local Repository Clones
+
+If the user chooses to clone student repositories, the repositories are cloned into the local directory specified by the user.
+
+### Configuration Summary
+
+At the end of execution, WSU Classroom displays a configuration summary containing information about the completed operation, including:
+
+- Organization
+- Assignment
+- Academic term
+- Template repository
+- Class roster
+- Number of students, TAs, and instructors
+- Number of invalid GitHub usernames
+- Number of successfully created repositories
+- TA repository and access selections
+- Repository naming format
+
 ## Troubleshooting
+
+The following are common issues that may occur while using WSU Classroom.
+
+### GitHub CLI Is Not Installed
+
+If WSU Classroom cannot find the GitHub CLI, verify that it is installed:
+
+```bash
+gh --version
+```
+
+Install the GitHub CLI before running WSU Classroom again.
+
+### GitHub CLI Is Not Authenticated
+
+If the GitHub CLI is installed but not authenticated, log in using:
+
+```bash
+gh auth login
+```
+
+You can verify the current authentication status with:
+
+```bash
+gh auth status
+```
+
+### Organization Access Error
+
+The authenticated GitHub user must have the required administrative access to the specified GitHub organization.
+
+If an organization access error occurs, verify that:
+
+- The organization name is correct.
+- The correct GitHub account is authenticated.
+- The authenticated account has administrative access to the organization.
+
+### Template Repository Error
+
+The repository specified with the -T option must exist and be configured as a GitHub template repository.
+
+If the template cannot be used, verify that:
+
+- The repository name is correct.
+- The repository exists.
+- The authenticated GitHub account can access the repository.
+- The repository is configured as a template repository.
+
+### Class Roster Not Found
+
+If the class roster cannot be found, verify that the path provided with the -C option is correct and that the CSV file exists.
+
+### Invalid GitHub Username
+
+WSU Classroom validates GitHub usernames while processing the class roster. Entries with invalid GitHub usernames are skipped and reported to the user.
+
+Verify that the Username field in the roster contains the individual's correct GitHub username.
+
+### Duplicate Repository Identifier
+
+Repository identifiers are generated from the portion of each email address before the @ symbol with periods removed.
+
+If multiple email addresses generate the same identifier, WSU Classroom will report a duplicate repository identifier and stop processing.
+
+Verify that each roster entry generates a unique email identifier before running the tool again.
+
+### Repository Creation Failure
+
+If a student repository cannot be created, verify that:
+
+- The organization is correct.
+- The template repository is accessible.
+- The repository does not already exist.
+- The authenticated GitHub account has the required permissions.
+
+Review the terminal output and configuration summary for additional information about errors encountered while processing the roster.
