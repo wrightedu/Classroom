@@ -19,7 +19,55 @@ The tool uses the GitHub CLI to interact with GitHub organizations, create repos
 
 ## Prerequisites
 
+- Bash
+- Git
+- GitHub CLI & Authernitcated
+- GitHub Organization Access
+- Template Repository
+- Class Roster CSV File
+
 ## Installation
+
+1. **Clone the Repository**
+
+Clone the WSU Classroom repository to your local machine:
+
+```bash
+git clone git@github.com:wrightedu/Classroom.git
+```
+
+Then navigate into the cloned repository.
+
+2. **Keep the Repository Up to Date**
+
+Before using WSU Classroom, make sure your local copy is up to date:
+
+```bash
+git pull
+```
+
+3. **Source WSU Classroom**
+
+WSU Classroom is intended to be sourced so that the `WSU_classroom` command is available from the user's shell.
+
+Add the following line to your `~/.bashrc`, replacing the path with the location of your cloned WSU Classroom repository:
+
+```bash
+source /path/to/wsu-classroom/wsu_classroom.sh
+```
+
+4. **Reload the Shell Configuration**
+
+After updating `~/.bashrc`, reload the configuration:
+
+```bash
+source ~/.bashrc
+```
+
+
+Alternatively, close and reopen the terminal.
+
+Once configured, the `WSU_classroom` command will be available from the command line.
 
 ## Usage
 
