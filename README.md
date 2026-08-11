@@ -147,7 +147,43 @@ Academic terms are represented using the following format:
 | Spring | sYY | s27 |
 | Summer | suYY | su27 |
 
+The academic term is automatically determined based on the current date:
+
+- **January–March:** Spring (sYY)
+- **April–June:** Summer (suYY)
+- **July–November:** Fall (fYY)
+- **December:** Spring of the following year (sYY)
+
+> [!TIP]
+> There is an option to make your own repository name if you do not like the generated repository name!
+
 ## How it Works
+
+When WSU Classroom is run, the tool performs the following steps:
+
+1. **Checks GitHub CLI** – Verifies that the GitHub CLI is installed and that the user is authenticated.
+
+2. **Processes Command-Line Arguments** – Reads the organization, assignment, template repository, and class roster provided by the user.
+
+3. **Validates the GitHub Organization** – Verifies that the authenticated user has the required access to the specified GitHub organization.
+
+4. **Validates the Template Repository** – Confirms that the specified repository exists and is configured as a GitHub template repository.
+
+5. **Confirms Repository Naming** – Generates the repository naming format and allows the user to modify the assignment, term, or repository naming before continuing.
+
+6. **Checks for Teaching Assistants** – If TAs are present in the class roster, the user can choose whether to create TA repositories and whether TAs should receive read access to student repositories.
+
+7. **Processes the Class Roster** – Reads each entry in the CSV file, validates GitHub usernames, and creates the appropriate repositories based on each individual's role.
+
+8. **Creates Student Repositories** – Creates private student repositories from the specified template and grants each student access to their repository.
+
+9. **Grant TA Access** – If selected, gives TAs read access to the student repositories.
+
+10. **Exports Repository Links** – Creates a CSV file containing student names and links to their generated repositories.
+
+11. **Offers Repository Cloning** – Prompts the user to optionally clone all student repositories to a local directory.
+
+12. **Displays a Configuration Summary** – Displays the configuration and results of the completed operation, including roster counts, invalid usernames, and successfully created repositories.
 
 ## Generated Output
 
