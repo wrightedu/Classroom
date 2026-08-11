@@ -98,14 +98,33 @@ Use the help option to display the available command-line options:
 WSU_classroom -h
 ```
 
-### Example
-
 ## Class Roster Format
 
-### Roles
+WSU Classroom requires a CSV file containing the class roster and majority of it can be obtained from Pilot. The CSV file must use the following column format:
+
+```csv
+Name,Email,Role,Username
+```
+
+| Column | Description | Get From Pilot? |
+| --- | --- | --- |
+| `Name` | The first and last name of the roster member. | Yes |
+| `Email` | The email address used to generate the repository identifier. | Yes |
+| `Role` | The individual's role in the course. | Yes |
+| `Username` | The individual's GitHub username. | No |
+
+### Supported Roles
+
+The following roles are supported:
+
+- **Student** – A student repository is created using the specified template repository.
+- **TA** – Can optionally receive a repository and read access to student repositories.
+- **Teacher / Instructor** – Identifies the course instructor. No repository is created.
 
 ## Repository Naming
 
 ## How it Works
 
 ## Generated Output
+
+## Troubleshooting
