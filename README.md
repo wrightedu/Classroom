@@ -21,7 +21,7 @@ The tool uses the GitHub CLI to interact with GitHub organizations, create repos
 
 - Bash
 - Git
-- GitHub CLI & Authernitcated
+- GitHub CLI & Authenticated
 - GitHub Organization Access
 - Template Repository
 - Class Roster CSV File
@@ -122,6 +122,30 @@ The following roles are supported:
 - **Teacher / Instructor** – Identifies the course instructor. No repository is created.
 
 ## Repository Naming
+
+WSU Classroom automatically generates repository names using the assignment name, the student's email identifier, and the current academic term.
+
+Repository names use the following format:
+
+`<assignment>-<email-id>-<term>`
+
+**For example:**
+
+`project-1-koppin5-f26`
+
+The email identifier is generated using the portion of the student's email address before the @ symbol, with periods removed.
+
+***For example:**
+
+`koppin.5@wright.edu → koppin5`
+
+Academic terms are represented using the following format:
+
+| Term | Format | Example |
+| --- | --- | --- |
+| Fall | fYY | f26 |
+| Spring | sYY | s27 |
+| Summer | suYY | su27 |
 
 ## How it Works
 
