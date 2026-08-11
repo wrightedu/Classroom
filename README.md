@@ -1,5 +1,18 @@
 # WSU Classroom
 
+## Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Class Roster Format](#class-roster-format)
+- [Repository Naming](#repository-naming)
+- [How It Works](#how-it-works)
+- [Generated Output](#generated-output)
+- [Troubleshooting](#troubleshooting)
+
 ## Overview
 
 WSU Classroom is a Bash-based command-line tool designed to simplify the creation and management of GitHub repositories for university courses. It provides an alternative to GitHub Classroom by allowing instructors to create and manage repositories using a class roster and a GitHub template repository.
@@ -313,3 +326,5 @@ If a student repository cannot be created, verify that:
 - The authenticated GitHub account has the required permissions.
 
 Review the terminal output and configuration summary for additional information about errors encountered while processing the roster.
+
+### [Back to Top!](#contents)
