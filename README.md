@@ -77,20 +77,26 @@ Once WSU Classroom has been installed and configured, run the tool using the `WS
 WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>
 ```
 
-**Options**
+**Flags**
 
-| Option | Description |
-| --- | --- |
-| `-h` | Displays the help message and exits. |
-| `-O` | Specifies the GitHub organization where repositories will be created. |
-| `-A` | Specifies the assignment name used when generating repository names. |
-| `-T` | Specifies the GitHub template repository used to create repositories. |
-| `-C` | Specifies the CSV file containing the class roster. |
+| Option | Argument | Description |
+| --- | --- | --- |
+| `-h` | None | Displays the help message and exits. |
+| `-O` | Organization | Specifies the GitHub organization where repositories will be created. |
+| `-A` | Assignment | Specifies the assignment name used to generate repository names. |
+| `-T` | Template | Specifies the GitHub template repository used to create student repositories. |
+| `-C` | CSV File | Specifies the class roster CSV file to process. |
 
 > [!IMPORTANT]  
 > The `-O`, `-A`, `-T`, and `-C` options are required.
 
-### Comamnd-Line Options
+When the command is run, WSU Classroom validates the provided configuration and processes the class roster. During execution, the user may be prompted for additional options, including TA repository creation, TA access to student repositories, and cloning student repositories to the local machine.
+
+Use the help option to display the available command-line options:
+
+```bash
+WSU_classroom -h
+```
 
 ### Example
 
