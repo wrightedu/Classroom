@@ -1,7 +1,8 @@
-# Verifies that GH is installed.
+# Checks if gh is installed to user's system
+# Inputs:
+#		None
 # Outputs:
-# 		GH is installed
-#		or an error message that prompts user to install it
+#		GH is installed or GH isnt installed and prompts user to install it
 isGitInstalled() {
 	if gh --version >/dev/null 2>&1; then
 		echo "GH is installed."
@@ -14,12 +15,11 @@ isGitInstalled() {
 	fi	
 }
 
-# Check if gh is authenticated with a GitHub account
-# Input:
-#		User input (y/n)
+# Checks if the user is authenticated with GitHub using gh
+# Inputs:
+#		None
 # Outputs:
-# 		GH is authenticated with GitHub
-#		or Gh isnt authenticated and prompts user to login
+#		GH is authenticated or GH isnt authenticated and prompts user to authenticate
 isGitAuth() {
 
     local choice
@@ -37,13 +37,14 @@ isGitAuth() {
     fi
 }
 
-# Verifies that the authenticated GitHub user is an owner of the specified GitHub organization
-# Input:
-#		ORGANIZATION - GitHub organization
+# Checks if the user is an owner of the specified GitHub organization
+# Inputs:
+#		ORGANIZATION - the name of the GitHub organization
 # Outputs:
-# 		Prints message whether the user is an owner of specified organization
+#		Prints message whether the user is an owner of the organization or not
 checkOrganizationOwnership() {
 
+    # Declare local variables
     local ORGANIZATION="$1"
     local USERNAME
     local ROLE
@@ -64,28 +65,29 @@ checkOrganizationOwnership() {
     echo "$USERNAME is an owner of the $ORGANIZATION"
 }
 
-# Makes sure the github username exists
-# Input:
-#		Github Username
+# Checks if the specified GitHub username is valid
+# Inputs:
+#		USERNAME - the GitHub username to check
 # Outputs:
-#		Returns 0 if valid, 1 otherwise
+#		Returns 0 if the username is valid, 1 if not
 isGitHubUserValid() {
-	local username="$1"
+	local USERNAME="$1"
 
-    if gh api "users/$username" >/dev/null 2>&1; then
+    if gh api "users/$USERNAME" >/dev/null 2>&1; then
         return 0
     else
         return 1
     fi
 }
 
-# Determines the current term based on the current month and year
+# Determines the current academic term based on the current date of local system
 # Inputs:
-#		Current month and year obtained from the system date
+#		None
 # Outputs:
-#		CURRENT_TERM variable is set to the current term in the format of fYY,
+#		Prints the current academic term in the format of fYY, sYY, or suYY
 getCurrentTerm() {
 
+    # Declare local variables
     local CURRENT_TERM=0
     local MONTH=$((10#$(date +%m)))
     local YEAR=$((10#$(date +%y)))
@@ -105,14 +107,16 @@ getCurrentTerm() {
     echo "$CURRENT_TERM"
 }
 
-# Generates a repository name based on the assignment, username, and term
+# Generates a repository name based on the assignment name, email identifier, and current term
 # Inputs:
-#		ASSIGNMENT - the name of the assignment
-#		USERNAME - the GitHub username of the authenticated user
-#		CURRENT_TERM - the current term determined by the getCurrentTerm function
+#		ASSIGNMENT - the assignment name
+#		USERNAME - the email identifier (derived from the student's email)
+#		TERM - the current academic term
 # Outputs:
-#		REPO_NAME variable is set to the generated repository name in the format of assignment-username-term
+#		Prints the generated repository name in the format of assignment-emailidentifier-term
 generateRepoName() {
+    
+    # Declare local variables
     local ASSIGNMENT="$1"
     local USERNAME="$2"
     local TERM="$3"
@@ -122,13 +126,15 @@ generateRepoName() {
     echo "$REPO_NAME"
 }
 
-# Allows the user to edit the generated repository name
+# Allows the user to edit the assignment name and/or term for repository naming
 # Inputs:
-#		None
+#		ASSIGNMENT - the assignment name
+#		CURRENT_TERM - the current academic term
 # Outputs:
-#		Prompts the user to edit the repository name or continue with the current name
+#		Prints the final assignment name and term after user edits
 editRepoName() {
 
+    # Declare local variables
     local ASSIGNMENT="$1"
     local CURRENT_TERM="$2"
 
@@ -137,6 +143,7 @@ editRepoName() {
 
     REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
 
+    # Allow the user to edit the assignment name and/or term for repository naming
     while true
     do
         echo
@@ -176,11 +183,11 @@ editRepoName() {
     echo "$ASSIGNMENT,$CURRENT_TERM"
 }
 
-# Verifies that the specified template repository exists and is a template repository
+# Checks if the specified template repository exists and is a template repository
 # Inputs:
-#		TEMPLATE - the name of the template repository
+#		TEMPLATE - the name of the template repository (in the format owner/repo)
 # Outputs:
-#		Prints message whether the template repository exists and is a template repository
+#		Prints message whether the template repository exists and is a template repository or not
 checkTemplateRepo() {
     local TEMPLATE="$1"
     if ! gh repo view "$TEMPLATE" >/dev/null 2>&1; then
@@ -196,14 +203,20 @@ checkTemplateRepo() {
     echo "Using template repository: $TEMPLATE"
 }
 
-# Processes the class roster and creates repos
+# Processes the CSV file containing names, GitHub usernames, and roles, and creates repositories accordingly
 # Inputs:
-#       CSV_FILE - CSV file containing names, GitHub usernames, and roles
+#		CSV_FILE - CSV file containing names, GitHub usernames, and roles
+#		ORGANIZATION - GitHub organization
+#		ASSIGNMENT - Assignment name
+#		CURRENT_TERM - Current academic term
+#		TEMPLATE - Template repository to use for creating new repositories
+#		CREATE_TA_REPOS - Flag indicating whether to create TA repositories (Y/N)
+#		GRANT_TA_ACCESS - Flag indicating whether to grant TAs access to student repositories (Y/N)
 # Outputs:
-#       Creates repos for students and TAs.
-#       Grants TAs read access to all student repos
+#		Creates repositories for students and TAs, and grants access to TAs if specified
 processRoster() {
 
+    # Declare local variables
     local CSV_FILE="$1"
     local ORGANIZATION="$2"
     local ASSIGNMENT="$3"
@@ -229,6 +242,7 @@ processRoster() {
     local GENERATED_REPO_LINKS
     local REPO_NAME
 
+    # Read the CSV file line by line, skipping the header, and process each entry
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
         [[ "$NAME" == "Name" ]] && continue
@@ -240,6 +254,7 @@ processRoster() {
 
         EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
 
+        # Check for duplicate email identifiers and report an error if found
         for USED in "${USED_EMAIL_IDS[@]}"
         do
             if [[ "$USED" == "$EMAIL_ID" ]]; then
@@ -250,19 +265,19 @@ processRoster() {
 
         USED_EMAIL_IDS+=("$EMAIL_ID")
 
+        # Check if the GitHub username is valid; if not, skip to the next entry
         if ! isGitHubUserValid "$USERNAME"; then
             echo "Skipping invalid GitHub username: $USERNAME"
             continue
         fi
 
+        # Create repositories based on the role of the user (Student, TA, or Instructor/Teacher)
         case "$ROLE" in
             Student)
                 STUDENTS+=("$EMAIL:$USERNAME")
 
                 if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
-
                 then
-
                     REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
                     GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
                 fi
