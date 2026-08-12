@@ -1,6 +1,21 @@
 GENERATED_REPO_LINKS=()
 SUCCESSFUL_REPOS=()
 
+# Displays usage information for the script
+# Inputs:
+#		None
+# Outputs:
+#		Prints usage information and exits the script
+usage() {
+    echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
+    echo "  -h                Show this help message and exit"
+    echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
+    echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
+    echo "  -T template       Specify the template repository to use for creating new repositories"
+    echo "  -C csv_file       Specify the class roster CSV file"
+    exit 0
+}
+
 # Gives TA's read access to every student's repo
 # Inputs:
 #       TA - GitHub username of the TA
