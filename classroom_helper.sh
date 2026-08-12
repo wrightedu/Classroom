@@ -13,7 +13,7 @@ usage() {
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
     echo "  -T template       Specify the template repository to use for creating new repositories"
     echo "  -C csv_file       Specify the class roster CSV file"
-    exit 0
+    return 0
 }
 
 # Gives TA's read access to every student's repo
@@ -27,10 +27,9 @@ grantTAAccess() {
     local TA="$1"
     local STUDENT_EMAIL="$2"
 
-    local EMAIL_ID
-    EMAIL_ID=$(generateEmailIdentifier "$STUDENT_EMAIL")
+    local EMAIL_ID=$(generateEmailIdentifier "$STUDENT_EMAIL")
 
-    getCurrentTerm
+    local CURRENT_TERM=$(getCurrentTerm)
     generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
 
     echo "Giving $TA read access to $REPO_NAME"
@@ -55,10 +54,9 @@ createStudentRepo() {
     local EMAIL="$2"
     local USERNAME="$3"
 
-    local EMAIL_ID
-    EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+    local EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
 
-    getCurrentTerm
+    local CURRENT_TERM=$(getCurrentTerm)
     generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
 
     echo "Creating student repository $REPO_NAME"
@@ -134,10 +132,9 @@ createTARepo() {
     local EMAIL="$1"
     local USERNAME="$2"
 
-    local EMAIL_ID
-    EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+    local EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
 
-    getCurrentTerm
+    local CURRENT_TERM=$(getCurrentTerm)
     generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
 
     echo "Creating TA repository $REPO_NAME"
