@@ -65,7 +65,6 @@ checkOrganizationOwnership() {
 isGitHubUserValid() {
 	local username="$1"
 
-    echo "gh api "users/$username""
     if gh api "users/$username" >/dev/null 2>&1; then
         return 0
     else
