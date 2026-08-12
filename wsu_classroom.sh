@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Function to clone repositories from a CSV file at time of running the script or as a seprate function.
+# Function to clone repositories from a CSV file during the WSU Classroom script execution or as a standalone function
 # Inputs:
 #       REPO_FILE - CSV file containing repository names and links
+#       CLONE_DIR - Directory to clone the repositories into
 # Outputs:
 #       Clones the repositories into the specified directory
-
 cloneRepositories() {
 
     local REPO_FILE
@@ -66,16 +66,17 @@ cloneRepositories() {
     echo "Finished cloning repositories."
 }
 
-# Main function to run the WSU Classroom script
+# Main function for the WSU Classroom script
 # Inputs:
-#       ORGANIZATION - GitHub organization
-#       ASSIGNMENT - Assignment name
-#       TEMPLATE - Template repository
-#       CSV_FILE - Class roster CSV file
+#       -O ORGANIZATION - GitHub organization
+#       -A ASSIGNMENT - Assignment name
+#       -T TEMPLATE - Template repository
+#       -C CSV_FILE - Class roster CSV file
 # Outputs:
 #       Creates repositories for students and TAs, grants TAs access to student repositories, and optionally clones the repositories to the local machine
 WSU_classroom() (
 
+    # Declare local variables
     local SCRIPT_DIR
     local ORGANIZATION
     local ASSIGNMENT
@@ -97,6 +98,7 @@ WSU_classroom() (
 	    return 1
     fi
 
+    # check if the user is authenticated with GitHub
     isGitAuth
 
     # process the command line arguments
@@ -107,6 +109,7 @@ WSU_classroom() (
         return 1
     fi
 
+    # reset the option index for getopts
     OPTIND=1
 
     while getopts ":h?O:A:T:C:" opt; do
@@ -169,6 +172,7 @@ WSU_classroom() (
         echo "CSV file '$CSV_FILE' found."
     fi
 
+    # check if the CSV file contains TAs and prompt the user to create TA repositories and grant access to student repositories
     if hasTAs "$CSV_FILE"; then
         echo
         read -p "Would you like to create repositories for TAs? (Y/N): " CREATE_TA_REPOS
@@ -193,5 +197,6 @@ WSU_classroom() (
         echo "Skipping repository cloning."
     fi
 
+    # display a summary of the configuration and actions taken
     configurationSummary "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE" "$CSV_FILE" "$CREATE_TA_REPOS" "$GRANT_TA_ACCESS" 
 )
