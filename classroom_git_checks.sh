@@ -123,39 +123,35 @@ editRepoName() {
     while true
     do
         echo
-        echo "Would you like to edit the repository name?"
-        echo "Example repository name: $REPO_NAME"
+        echo "Based on your input, repository names will be in the following format:"
+        echo "$REPO_NAME"
         echo
-        echo "1. Assignment: $ASSIGNMENT"
-        echo "2. Term: $CURRENT_TERM"
-        echo "3. Use custom repository name"
-        echo "4. Continue with current repository name"
-        echo "5. Cancel and exit"
+        echo "1. Use default format"
+        echo "2. Edit assignment name (currently \`$ASSIGNMENT\`)"
+        echo "3. Edit term (currently \`$CURRENT_TERM\`)"
+        echo "4. Cancel and exit"
         echo
 
-        read -p "Enter your choice (1-5): " choice
+        read -p "Enter your choice (1-4): " choice
 
         case $choice in
             1)
+                break
+                ;;
+            2)
                 read -p "Enter new assignment name: " ASSIGNMENT
                 REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
                 ;;
-            2)
-                read -p "Enter new term (e.g., f24, s25, su25): " CURRENT_TERM
+            3)
+                read -p "Enter new term (e.g., f26, s27, su27): " CURRENT_TERM
                 REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
                 ;;
-            3)
-                read -p "Enter custom repository name: " REPO_NAME
-                ;;
             4)
-                break
-                ;;
-            5)
                 echo "Exiting..."
-                exit 0
+                return 1
                 ;;
             *)
-                echo "Invalid choice. Please enter a number between 1 and 5."
+                echo "Invalid choice. Please enter a number between 1 and 4."
                 ;;
         esac
     done
