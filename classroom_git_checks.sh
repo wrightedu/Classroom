@@ -21,6 +21,9 @@ isGitInstalled() {
 # 		GH is authenticated with GitHub
 #		or Gh isnt authenticated and prompts user to login
 isGitAuth() {
+
+    local choice
+
     if gh auth status >/dev/null 2>&1; then
 		echo "GH is authenticated with GitHub."
 		return 0
@@ -40,21 +43,25 @@ isGitAuth() {
 # Outputs:
 # 		Prints message whether the user is an owner of specified organization
 checkOrganizationOwnership() {
-	local USERNAME=$(gh api user --jq '.login')
-	local ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
 
-	if [ $? -ne 0 ]; then
-		echo "$USERNAME is not a part of the $ORGANIZATION organization."
-		return 1
-	fi
+    local ORGANIZATION="$1"
+    local USERNAME
+    local ROLE
 
-	if [ "$ROLE" != "admin" ]; then
-       		echo "$USERNAME is not an owner of $ORGANIZATION"
-       		return 1
-	fi
+    USERNAME=$(gh api user --jq '.login')
+    ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
 
-	echo "$USERNAME is an owner of the $ORGANIZATION"
-	#return 0
+    if [ $? -ne 0 ]; then
+        echo "$USERNAME is not a part of the $ORGANIZATION organization."
+        return 1
+    fi
+
+    if [ "$ROLE" != "admin" ]; then
+        echo "$USERNAME is not an owner of $ORGANIZATION"
+        return 1
+    fi
+
+    echo "$USERNAME is an owner of the $ORGANIZATION"
 }
 
 # Makes sure the github username exists
@@ -95,7 +102,7 @@ getCurrentTerm() {
     else
         CURRENT_TERM="su${YEAR}"
     fi
-    echo $CURRENT_TERM
+    echo "$CURRENT_TERM"
 }
 
 # Generates a repository name based on the assignment, username, and term
@@ -109,8 +116,10 @@ generateRepoName() {
     local ASSIGNMENT="$1"
     local USERNAME="$2"
     local TERM="$3"
+    local REPO_NAME
 
     REPO_NAME="${ASSIGNMENT}-${USERNAME}-${TERM}"
+    echo "$REPO_NAME"
 }
 
 # Allows the user to edit the generated repository name
@@ -119,6 +128,14 @@ generateRepoName() {
 # Outputs:
 #		Prompts the user to edit the repository name or continue with the current name
 editRepoName() {
+
+    local ASSIGNMENT="$1"
+    local CURRENT_TERM="$2"
+
+    local REPO_NAME
+    local choice
+
+    REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
 
     while true
     do
@@ -155,6 +172,8 @@ editRepoName() {
                 ;;
         esac
     done
+
+    echo "$ASSIGNMENT,$CURRENT_TERM"
 }
 
 # Verifies that the specified template repository exists and is a template repository
@@ -163,7 +182,7 @@ editRepoName() {
 # Outputs:
 #		Prints message whether the template repository exists and is a template repository
 checkTemplateRepo() {
-    local TEMPLATE=$1
+    local TEMPLATE="$1"
     if ! gh repo view "$TEMPLATE" >/dev/null 2>&1; then
         echo "Error: Template repository '$TEMPLATE' does not exist."
         return 1
@@ -185,13 +204,33 @@ checkTemplateRepo() {
 #       Grants TAs read access to all student repos
 processRoster() {
 
-    TAS=()
-    STUDENTS=()
-    USED_EMAIL_IDS=()
+    local CSV_FILE="$1"
+    local ORGANIZATION="$2"
+    local ASSIGNMENT="$3"
+    local CURRENT_TERM="$4"
+    local TEMPLATE="$5"
+    local CREATE_TA_REPOS="$6"
+    local GRANT_TA_ACCESS="$7"
+
+    local TAS=()
+    local STUDENTS=()
+    local USED_EMAIL_IDS=()
+
+    local NAME
+    local EMAIL
+    local ROLE
+    local USERNAME
+    local EMAIL_ID
+    local USED
+    local TA
+    local TA_USERNAME
+    local STUDENT
+    local STUDENT_EMAIL
+    local GENERATED_REPO_LINKS
+    local REPO_NAME
 
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
-
         [[ "$NAME" == "Name" ]] && continue
 
         NAME=${NAME//$'\r'/}
@@ -205,13 +244,11 @@ processRoster() {
         do
             if [[ "$USED" == "$EMAIL_ID" ]]; then
                 echo "Error: Duplicate repository identifier '$EMAIL_ID'."
-                exit 1
+                return 1
             fi
         done
 
         USED_EMAIL_IDS+=("$EMAIL_ID")
-
-        EMAIL_IDS[$EMAIL_ID]="$EMAIL"
 
         if ! isGitHubUserValid "$USERNAME"; then
             echo "Skipping invalid GitHub username: $USERNAME"
@@ -219,18 +256,38 @@ processRoster() {
         fi
 
         case "$ROLE" in
-
             Student)
                 STUDENTS+=("$EMAIL:$USERNAME")
-                createStudentRepo "$NAME" "$EMAIL" "$USERNAME"
+
+                if createStudentRepo \
+                    "$NAME" \
+                    "$EMAIL" \
+                    "$USERNAME" \
+                    "$ORGANIZATION" \
+                    "$ASSIGNMENT" \
+                    "$CURRENT_TERM" \
+                    "$TEMPLATE"
+                then
+                    REPO_NAME=$(generateRepoName \
+                    "$ASSIGNMENT" \
+                    "$EMAIL_ID" \
+                    "$CURRENT_TERM"
+                    )
+
+                    GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
+                fi
                 ;;
 
             TA)
                 TAS+=("$EMAIL:$USERNAME")
-                
-                # if the user wants to create TA repos, create one for the TAs
+
                 if [[ "$CREATE_TA_REPOS" =~ ^[Yy]$ ]]; then
-                    createTARepo "$EMAIL" "$USERNAME"
+                    createTARepo \
+                        "$EMAIL" \
+                        "$USERNAME" \
+                        "$ORGANIZATION" \
+                        "$ASSIGNMENT" \
+                        "$CURRENT_TERM"
                 fi
                 ;;
 
@@ -246,7 +303,6 @@ processRoster() {
     done < "$CSV_FILE"
 
     if [[ "$GRANT_TA_ACCESS" =~ ^[Yy]$ ]]; then
-
         echo
         echo "Granting TA access..."
 
@@ -257,9 +313,14 @@ processRoster() {
             for STUDENT in "${STUDENTS[@]}"
             do
                 STUDENT_EMAIL="${STUDENT%%:*}"
-                grantTAAccess "$TA_USERNAME" "$STUDENT_EMAIL"
+
+                grantTAAccess \
+                    "$TA_USERNAME" \
+                    "$STUDENT_EMAIL" \
+                    "$ORGANIZATION" \
+                    "$ASSIGNMENT" \
+                    "$CURRENT_TERM"
             done
         done
-
     fi
 }

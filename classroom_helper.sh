@@ -1,6 +1,3 @@
-GENERATED_REPO_LINKS=()
-SUCCESSFUL_REPOS=()
-
 # Displays usage information for the script
 # Inputs:
 #		None
@@ -26,11 +23,15 @@ grantTAAccess() {
 
     local TA="$1"
     local STUDENT_EMAIL="$2"
+    local ORGANIZATION="$3"
+    local ASSIGNMENT="$4"
+    local CURRENT_TERM="$5"
 
-    local EMAIL_ID=$(generateEmailIdentifier "$STUDENT_EMAIL")
+    local EMAIL_ID
+    local REPO_NAME
 
-    local CURRENT_TERM=$(getCurrentTerm)
-    generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
+    EMAIL_ID=$(generateEmailIdentifier "$STUDENT_EMAIL")
+    REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
 
     echo "Giving $TA read access to $REPO_NAME"
 
@@ -53,11 +54,16 @@ createStudentRepo() {
     local NAME="$1"
     local EMAIL="$2"
     local USERNAME="$3"
+    local ORGANIZATION="$4"
+    local ASSIGNMENT="$5"
+    local CURRENT_TERM="$6"
+    local TEMPLATE="$7"
 
-    local EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+    local EMAIL_ID
+    local REPO_NAME
 
-    local CURRENT_TERM=$(getCurrentTerm)
-    generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
+    EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+    REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
 
     echo "Creating student repository $REPO_NAME"
 
@@ -65,32 +71,38 @@ createStudentRepo() {
         --template "$TEMPLATE" \
         --private >/dev/null </dev/null
     then
-        ((SUCCESSFUL_REPOS++))
-
         gh api \
             -X PUT \
             "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
             -f permission="push" >/dev/null </dev/null
 
-        GENERATED_REPO_LINKS+=(
-            "$NAME,https://github.com/$ORGANIZATION/$REPO_NAME"
-        )
+        return 0
     else
-        echo "Error: Failed to create repository $REPO_NAME"
+        echo "Error: Failed to create repository $REPO_NAME" >&2
+        return 1
     fi
 }
 
-# Exports the generated repository links to a text file
+# Exports the generated repository links to a CSV file
 # Inputs:
-#       None
+#       ASSIGNMENT - Assignment name
+#       CURRENT_TERM - Current academic term
+#       Remaining arguments - Generated repository links in "Name,Repository Link" format
 # Outputs:
-#       Creates a text file containing the links to the generated repositories in the format "Name,Repository Link" and sorts them alphabetically by name
+#       Creates a CSV file containing the links to the generated repositories
+#       and sorts them alphabetically by last name
 exportRepoLinks() {
+
+    local ASSIGNMENT="$1"
+    local CURRENT_TERM="$2"
+    shift 2
+
+    local GENERATED_REPO_LINKS=("$@")
     local OUTPUT_FILE="${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv"
 
     if [[ ${#GENERATED_REPO_LINKS[@]} -eq 0 ]]; then
         echo "No repositories were created. No links to export."
-        return
+        return 1
     fi
 
     echo "Name,Repository Link" > "$OUTPUT_FILE"
@@ -131,11 +143,15 @@ createTARepo() {
 
     local EMAIL="$1"
     local USERNAME="$2"
+    local ORGANIZATION="$3"
+    local ASSIGNMENT="$4"
+    local CURRENT_TERM="$5"
 
-    local EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+    local EMAIL_ID
+    local REPO_NAME
 
-    local CURRENT_TERM=$(getCurrentTerm)
-    generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
+    EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+    REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
 
     echo "Creating TA repository $REPO_NAME"
 
@@ -154,12 +170,21 @@ createTARepo() {
 # Outputs:
 #       Returns 0 if there are TAs, 1 otherwise
 hasTAs() {
+
+    local CSV_FILE="$1"
+    local NAME
+    local EMAIL
+    local ROLE
+    local USERNAME
+
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
         ROLE=${ROLE//$'\r'/}
+
         if [[ "$ROLE" == "TA" ]]; then
             return 0
         fi
+
     done < "$CSV_FILE"
 
     return 1
@@ -174,16 +199,28 @@ hasTAs() {
 #       CSV_FILE - Class roster CSV file
 #       CREATE_TA_REPOS - Whether TA repositories were created
 #       GRANT_TA_ACCESS - Whether TAs received access to student repositories
-#       SUCCESSFUL_REPOS - Number of successfully created student repositories
 # Outputs:
 #       Prints a summary of the configuration and results, including counts of students, TAs,
 configurationSummary() {
+
+    local ORGANIZATION="$1"
+    local ASSIGNMENT="$2"
+    local CURRENT_TERM="$3"
+    local TEMPLATE="$4"
+    local CSV_FILE="$5"
+    local CREATE_TA_REPOS="$6"
+    local GRANT_TA_ACCESS="$7"
 
     local STUDENT_COUNT=0
     local TA_COUNT=0
     local INSTRUCTOR_COUNT=0
 
-    INVALID_USERNAMES=()
+    local INVALID_USERNAMES=()
+
+    local NAME
+    local EMAIL
+    local ROLE
+    local USERNAME
 
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
@@ -230,7 +267,6 @@ configurationSummary() {
     echo "TAs:                   $TA_COUNT"
     echo "Instructors:           $INSTRUCTOR_COUNT"
     echo "Invalid usernames:     ${#INVALID_USERNAMES[@]}"
-    echo "Successful repos:      $SUCCESSFUL_REPOS"
     echo
     echo "Create TA repos:       $CREATE_TA_REPOS"
     echo "Grant TA access:       $GRANT_TA_ACCESS"
