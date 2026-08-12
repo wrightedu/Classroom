@@ -1,8 +1,8 @@
-# Displays usage information for the script
+# Displays the usage information for the script
 # Inputs:
-#		None
+#       None
 # Outputs:
-#		Prints usage information and exits the script
+#       Prints the usage information to the console
 usage() {
     echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
     echo "  -h                Show this help message and exit"
@@ -13,14 +13,18 @@ usage() {
     return 0
 }
 
-# Gives TA's read access to every student's repo
+# Grants a TA read access to a student's repository
 # Inputs:
 #       TA - GitHub username of the TA
-#       STUDENT - GitHub username of the student
+#       STUDENT_EMAIL - Email address of the student
+#       ORGANIZATION - GitHub organization
+#       ASSIGNMENT - Assignment name
+#       CURRENT_TERM - Current academic term
 # Outputs:
 #       Grants the TA read access to the student's repository
 grantTAAccess() {
 
+    # Declare local variables
     local TA="$1"
     local STUDENT_EMAIL="$2"
     local ORGANIZATION="$3"
@@ -41,16 +45,20 @@ grantTAAccess() {
         -f permission="pull" >/dev/null </dev/null
 }
 
-# Creates a private repo for a student
+# Creates a private repository for a student and grants the student write access
 # Inputs:
 #       NAME - Name of the student
 #       EMAIL - Email address of the student
 #       USERNAME - GitHub username of the student
+#       ORGANIZATION - GitHub organization
+#       ASSIGNMENT - Assignment name
+#       CURRENT_TERM - Current academic term
+#       TEMPLATE - Template repository to use for creating the new repository
 # Outputs:
-#       Creates a private repository and grants the student write access
-#       Adds the repository link to GENERATED_REPO_LINKS
+#       Creates a private repository for the student and grants the student write access
 createStudentRepo() {
 
+    # Declare local variables
     local NAME="$1"
     local EMAIL="$2"
     local USERNAME="$3"
@@ -67,6 +75,7 @@ createStudentRepo() {
 
     echo "Creating student repository $REPO_NAME"
 
+    # Create the repository using the specified template and grant the student write access
     if gh repo create "$ORGANIZATION/$REPO_NAME" \
         --template "$TEMPLATE" \
         --private >/dev/null </dev/null
@@ -75,7 +84,6 @@ createStudentRepo() {
             -X PUT \
             "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
             -f permission="push" >/dev/null </dev/null
-
         return 0
     else
         echo "Error: Failed to create repository $REPO_NAME" >&2
@@ -87,19 +95,21 @@ createStudentRepo() {
 # Inputs:
 #       ASSIGNMENT - Assignment name
 #       CURRENT_TERM - Current academic term
-#       Remaining arguments - Generated repository links in "Name,Repository Link" format
+#       GENERATED_REPO_LINKS - Array of generated repository links
 # Outputs:
-#       Creates a CSV file containing the links to the generated repositories
-#       and sorts them alphabetically by last name
+#       Creates a CSV file containing the repository links
 exportRepoLinks() {
 
+    # Declare local variables
     local ASSIGNMENT="$1"
     local CURRENT_TERM="$2"
+    
     shift 2
 
     local GENERATED_REPO_LINKS=("$@")
     local OUTPUT_FILE="${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv"
 
+    # Check if there are any generated repository links to export
     if [[ ${#GENERATED_REPO_LINKS[@]} -eq 0 ]]; then
         echo "No repositories were created. No links to export."
         return 1
@@ -107,6 +117,7 @@ exportRepoLinks() {
 
     echo "Name,Repository Link" > "$OUTPUT_FILE"
 
+    # Sort the generated repository links by name and export them to the CSV file
     printf "%s\n" "${GENERATED_REPO_LINKS[@]}" \
         | awk -F',' '{
             split($1, name, " ")
@@ -119,28 +130,34 @@ exportRepoLinks() {
     echo "Repository links exported to $OUTPUT_FILE"
 }
 
-# Generates an identifier from an email address by extracting the part before the '@' symbol
+# Generates a unique identifier from an email address by removing the domain and any periods
 # Inputs:
-#       EMAIL - Email address of the student
+#       EMAIL - Email address to generate the identifier from
 # Outputs:
-#       Returns the identifier (part before '@') of the email address
+#       Returns the unique identifier derived from the email address
 generateEmailIdentifier() {
 
+    # Declare local variables
     local EMAIL="$1"
     local IDENTIFIER="${EMAIL%@*}"
+    
     IDENTIFIER="${IDENTIFIER//./}"
 
     echo "$IDENTIFIER"
 }
 
-#! How are we formatting TA Repo's/ Do they even need repos
-# Creates a private repo for a TA
+# Creates a private repository for a TA and grants the TA write access
 # Inputs:
+#       EMAIL - Email address of the TA
 #       USERNAME - GitHub username of the TA
+#       ORGANIZATION - GitHub organization
+#       ASSIGNMENT - Assignment name
+#       CURRENT_TERM - Current academic term
 # Outputs:
-#       Creates a private repository and grants the TA write access
+#       Creates a private repository for the TA and grants the TA write access
 createTARepo() {
 
+    # Declare local variables
     local EMAIL="$1"
     local USERNAME="$2"
     local ORGANIZATION="$3"
@@ -164,13 +181,14 @@ createTARepo() {
         -f permission="push" >/dev/null </dev/null
 }
 
-# Checks if there are any TAs in the CSV file
+# Checks if the CSV file contains any TAs
 # Inputs:
 #       CSV_FILE - CSV file containing names, GitHub usernames, and roles
 # Outputs:
-#       Returns 0 if there are TAs, 1 otherwise
+#       Returns 0 (true) if the CSV file contains any TAs, otherwise returns
 hasTAs() {
 
+    # Declare local variables
     local CSV_FILE="$1"
     local NAME
     local EMAIL
@@ -190,19 +208,20 @@ hasTAs() {
     return 1
 }
 
-# Displays a summary of the configuration and results
+# Displays a summary of the configuration and actions taken
 # Inputs:
 #       ORGANIZATION - GitHub organization
 #       ASSIGNMENT - Assignment name
 #       CURRENT_TERM - Current academic term
-#       TEMPLATE - Template repository
-#       CSV_FILE - Class roster CSV file
-#       CREATE_TA_REPOS - Whether TA repositories were created
-#       GRANT_TA_ACCESS - Whether TAs received access to student repositories
+#       TEMPLATE - Template repository to use for creating new repositories
+#       CSV_FILE - CSV file containing names, GitHub usernames, and roles
+#       CREATE_TA_REPOS - Flag indicating whether to create TA repositories
+#       GRANT_TA_ACCESS - Flag indicating whether to grant TAs access to student repositories
 # Outputs:
-#       Prints a summary of the configuration and results, including counts of students, TAs,
+#       Prints a summary of the configuration and actions taken to the console
 configurationSummary() {
 
+    # Declare local variables
     local ORGANIZATION="$1"
     local ASSIGNMENT="$2"
     local CURRENT_TERM="$3"
@@ -222,6 +241,7 @@ configurationSummary() {
     local ROLE
     local USERNAME
 
+    # Read the CSV file and count the number of students, TAs, and instructors, and check for invalid GitHub usernames
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
         # Skip header
