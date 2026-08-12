@@ -1,5 +1,65 @@
 #!/bin/bash
 
+cloneRepositories() {
+
+    local REPO_FILE
+    local CLONE_DIR
+    local CREATE
+    local NAME
+    local REPO_LINK
+    local REPO_NAME
+
+    # Ask the user for the repository links CSV file
+    read -p "Enter the repository links CSV file: " REPO_FILE
+
+    # Verify the repository links file exists
+    if [[ ! -f "$REPO_FILE" ]]; then
+        echo "Error: CSV file '$REPO_FILE' not found."
+        return 1
+    fi
+
+    echo "Using repository links file: $REPO_FILE"
+
+    # Ask where the repositories should be cloned
+    read -p "Enter the directory to clone repositories into: " CLONE_DIR
+
+    # Create the directory if it does not exist
+    if [[ ! -d "$CLONE_DIR" ]]; then
+        read -p "Directory does not exist. Create it? (Y/N): " CREATE
+
+        if [[ "$CREATE" =~ ^[Yy]$ ]]; then
+            mkdir -p "$CLONE_DIR"
+        else
+            echo "Skipping repository cloning."
+            return 0
+        fi
+    fi
+
+    # Read repository information from the CSV file
+    while IFS=',' read -r NAME REPO_LINK || [[ -n "$NAME" ]]
+    do
+        # Skip header
+        [[ "$NAME" == "Name" ]] && continue
+
+        # Remove carriage returns
+        NAME=${NAME//$'\r'/}
+        REPO_LINK=${REPO_LINK//$'\r'/}
+
+        # Skip empty repository links
+        [[ -z "$REPO_LINK" ]] && continue
+
+        # Get repository name from the repository URL
+        REPO_NAME="${REPO_LINK##*/}"
+
+        echo "Cloning $NAME: $REPO_NAME..."
+
+        gh repo clone "$REPO_LINK" "$CLONE_DIR/$REPO_NAME"
+
+    done < "$REPO_FILE"
+
+    echo "Finished cloning repositories."
+}
+
 WSU_classroom() (
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
