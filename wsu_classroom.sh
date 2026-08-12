@@ -5,21 +5,6 @@ SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 source "$SCRIPT_DIR/classroom_git_checks.sh"
 source "$SCRIPT_DIR/classroom_helper.sh"
 
-# Displays usage information for the script
-# Inputs:
-#		None
-# Outputs:
-#		Prints usage information and exits the script
-usage() {
-    echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
-    echo "  -h                Show this help message and exit"
-    echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
-    echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
-    echo "  -T template       Specify the template repository to use for creating new repositories"
-    echo "  -C csv_file       Specify the class roster CSV file"
-    exit 0
-}
-
 WSU_classroom() {
 # if git is intalled run git authenticator
 if ! isGitInstalled; then
@@ -119,5 +104,3 @@ fi
 
 configurationSummary
 }
-
-WSU_classroom "$@"
