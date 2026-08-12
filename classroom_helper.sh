@@ -235,8 +235,6 @@ configurationSummary() {
     echo "Create TA repos:       $CREATE_TA_REPOS"
     echo "Grant TA access:       $GRANT_TA_ACCESS"
     echo
-    echo "Repository format:"
-    echo "  ${ASSIGNMENT}-<email-id>-${CURRENT_TERM}"
 
     if [[ ${#INVALID_USERNAMES[@]} -gt 0 ]]; then
         echo
