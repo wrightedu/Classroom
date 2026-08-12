@@ -259,21 +259,11 @@ processRoster() {
             Student)
                 STUDENTS+=("$EMAIL:$USERNAME")
 
-                if createStudentRepo \
-                    "$NAME" \
-                    "$EMAIL" \
-                    "$USERNAME" \
-                    "$ORGANIZATION" \
-                    "$ASSIGNMENT" \
-                    "$CURRENT_TERM" \
-                    "$TEMPLATE"
-                then
-                    REPO_NAME=$(generateRepoName \
-                    "$ASSIGNMENT" \
-                    "$EMAIL_ID" \
-                    "$CURRENT_TERM"
-                    )
+                if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
 
+                then
+
+                    REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
                     GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
                 fi
                 ;;
@@ -282,12 +272,7 @@ processRoster() {
                 TAS+=("$EMAIL:$USERNAME")
 
                 if [[ "$CREATE_TA_REPOS" =~ ^[Yy]$ ]]; then
-                    createTARepo \
-                        "$EMAIL" \
-                        "$USERNAME" \
-                        "$ORGANIZATION" \
-                        "$ASSIGNMENT" \
-                        "$CURRENT_TERM"
+                    createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM"
                 fi
                 ;;
 
@@ -314,12 +299,7 @@ processRoster() {
             do
                 STUDENT_EMAIL="${STUDENT%%:*}"
 
-                grantTAAccess \
-                    "$TA_USERNAME" \
-                    "$STUDENT_EMAIL" \
-                    "$ORGANIZATION" \
-                    "$ASSIGNMENT" \
-                    "$CURRENT_TERM"
+                grantTAAccess "$TA_USERNAME" "$STUDENT_EMAIL" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM"
             done
         done
     fi

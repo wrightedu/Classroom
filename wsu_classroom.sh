@@ -177,14 +177,7 @@ WSU_classroom() (
     fi
 
     # process the class roster and create repositories
-    processRoster \
-        "$CSV_FILE" \
-        "$ORGANIZATION" \
-        "$ASSIGNMENT" \
-        "$CURRENT_TERM" \
-        "$TEMPLATE" \
-        "$CREATE_TA_REPOS" \
-        "$GRANT_TA_ACCESS"
+    processRoster "$CSV_FILE" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE" "$CREATE_TA_REPOS" "$GRANT_TA_ACCESS"
 
     # creates file of student repo links for the instructor to use
     exportRepoLinks
@@ -200,12 +193,5 @@ WSU_classroom() (
         echo "Skipping repository cloning."
     fi
 
-    configurationSummary \
-    "$ORGANIZATION" \
-    "$ASSIGNMENT" \
-    "$CURRENT_TERM" \
-    "$TEMPLATE" \
-    "$CSV_FILE" \
-    "$CREATE_TA_REPOS" \
-    "$GRANT_TA_ACCESS" \
+    configurationSummary "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE" "$CSV_FILE" "$CREATE_TA_REPOS" "$GRANT_TA_ACCESS" 
 )
