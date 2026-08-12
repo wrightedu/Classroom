@@ -1,15 +1,17 @@
 #!/bin/bash
 
+WSU_classroom() (
+
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
 source "$SCRIPT_DIR/classroom_git_checks.sh"
 source "$SCRIPT_DIR/classroom_helper.sh"
 
-WSU_classroom() {
 # if git is intalled run git authenticator
 if ! isGitInstalled; then
-	exit 1
+	return 1
 fi
+
 isGitAuth
 
 # process the command line arguments
@@ -17,20 +19,24 @@ isGitAuth
 if [ $# -eq 0 ]; then
     echo "No arguments provided."
     usage
+    return 1
 fi
+
+OPTIND=1
 
 while getopts ":h?O:A:T:C:" opt; do
     case $opt in
         h|\?)
             usage
+	        return 0
             ;;
         O)
-			ORGANIZATION="$OPTARG"
+	        ORGANIZATION="$OPTARG"
             ;;
         A)
             ASSIGNMENT="$OPTARG"
 
-            getCurrentTerm
+	        local CURRENT_TERM=$(getCurrentTerm)
             REPO_NAME="$ASSIGNMENT-email-$CURRENT_TERM"
 
             echo "Generated repository name: $REPO_NAME"
@@ -44,10 +50,12 @@ while getopts ":h?O:A:T:C:" opt; do
         :)
             echo "Error: Option -$OPTARG requires an argument."
             usage
+            return 1
             ;;
         *)
             echo "Error: Invalid option -$OPTARG"
             usage
+            return 1
             ;;
     esac
 done
@@ -56,13 +64,14 @@ done
 if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
     echo "Error: -O -A -T -C are required."
     usage
+    return 1
 fi
 
 # verify ownership of the organization
 checkOrganizationOwnership
 
 # verify that the specified template repository exists and is a template repository
-checkTemplateRepo
+checkTemplateRepo $TEMPLATE
 
 # allow the user to edit the generated repository name before creating any repositories
 editRepoName
@@ -103,4 +112,4 @@ else
 fi
 
 configurationSummary
-}
+)

@@ -23,6 +23,7 @@ isGitInstalled() {
 isGitAuth() {
     if gh auth status >/dev/null 2>&1; then
 		echo "GH is authenticated with GitHub."
+		return 0
     else
 		echo "GH is not authenticated with GitHub."
         read -p "Would you like to log in now? (Y/N): " choice
@@ -39,20 +40,21 @@ isGitAuth() {
 # Outputs:
 # 		Prints message whether the user is an owner of specified organization
 checkOrganizationOwnership() {
-	USERNAME=$(gh api user --jq '.login')
-	ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
+	local USERNAME=$(gh api user --jq '.login')
+	local ROLE=$(gh api "/orgs/$ORGANIZATION/memberships/$USERNAME" --jq '.role' 2>/dev/null)
 
 	if [ $? -ne 0 ]; then
 		echo "$USERNAME is not a part of the $ORGANIZATION organization."
-		exit 1
+		return 1
 	fi
 
 	if [ "$ROLE" != "admin" ]; then
        		echo "$USERNAME is not an owner of $ORGANIZATION"
-       		exit 1
+       		return 1
 	fi
 
 	echo "$USERNAME is an owner of the $ORGANIZATION"
+	#return 0
 }
 
 # Makes sure the github username exists
@@ -63,7 +65,6 @@ checkOrganizationOwnership() {
 isGitHubUserValid() {
 	local username="$1"
 
-    echo "gh api "users/$username""
     if gh api "users/$username" >/dev/null 2>&1; then
         return 0
     else
@@ -78,6 +79,7 @@ isGitHubUserValid() {
 #		CURRENT_TERM variable is set to the current term in the format of fYY,
 getCurrentTerm() {
 
+    local CURRENT_TERM=0
     local MONTH=$((10#$(date +%m)))
     local YEAR=$((10#$(date +%y)))
 
@@ -93,6 +95,7 @@ getCurrentTerm() {
     else
         CURRENT_TERM="su${YEAR}"
     fi
+    echo $CURRENT_TERM
 }
 
 # Generates a repository name based on the assignment, username, and term
@@ -164,15 +167,15 @@ editRepoName() {
 # Outputs:
 #		Prints message whether the template repository exists and is a template repository
 checkTemplateRepo() {
-
+    local TEMPLATE=$1
     if ! gh repo view "$TEMPLATE" >/dev/null 2>&1; then
         echo "Error: Template repository '$TEMPLATE' does not exist."
-        exit 1
+        return 1
     fi
 
     if [[ "$(gh api "repos/$TEMPLATE" --jq '.is_template')" != "true" ]]; then
         echo "Error: '$TEMPLATE' is not a template repository."
-        exit 1
+        return 1
     fi
 
     echo "Using template repository: $TEMPLATE"
@@ -294,7 +297,7 @@ cloneRepositories() {
 
         EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
 
-        getCurrentTerm
+        local CURRENT_TERM=$(getCurrentTerm)
         generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM"
 
         echo "Cloning $REPO_NAME..."
