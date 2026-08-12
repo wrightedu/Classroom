@@ -182,9 +182,11 @@ When WSU Classroom is run, the tool performs the following steps:
 
 4. **Validates the Template Repository** – Confirms that the specified repository exists and is configured as a GitHub template repository.
 
+![Validates Authentication and Arguments](./screenshots/validates-all-args.png)
+
 5. **Confirms Repository Naming** – Generates the repository naming format and allows the user to modify the assignment, term, or repository naming before continuing.
 
-![Confirm Repo Names with Correct Command](./screenshots/first-correct-runtrhough.png)
+![Confirm Name for Repositories](./screenshots/confirm-choice.png)
 
 6. **Checks for Teaching Assistants** – If TAs are present in the class roster, the user can choose whether to create TA repositories and whether TAs should receive read access to student repositories.
 
@@ -194,11 +196,21 @@ When WSU Classroom is run, the tool performs the following steps:
 
 9. **Grant TA Access** – If selected, gives TAs read access to the student repositories.
 
+![Grant TA Access](./screenshots/granting-ta-access.png)
+
 10. **Exports Repository Links** – Creates a CSV file containing student names and links to their generated repositories.
+
+![Output File of Repository Links](./screenshots/output-file.png)
 
 11. **Offers Repository Cloning** – Prompts the user to optionally clone all student repositories to a local directory.
 
+![Offers to Clone Repos](./screenshots/cloning-option-yes.png)
+
+![New Directory of Cloned Repositories](./screenshots/cloned-repos.png)
+
 12. **Displays a Configuration Summary** – Displays the configuration and results of the completed operation, including roster counts, invalid usernames, and successfully created repositories.
+
+![Configuration Summary Output](./screenshots/config-summary.png)
 
 ## Generated Output
 
