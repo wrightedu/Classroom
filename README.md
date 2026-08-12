@@ -184,6 +184,8 @@ When WSU Classroom is run, the tool performs the following steps:
 
 5. **Confirms Repository Naming** – Generates the repository naming format and allows the user to modify the assignment, term, or repository naming before continuing.
 
+![Confirm Repo Names with Correct Command](./screenshots/first-correct-runtrhough.png)
+
 6. **Checks for Teaching Assistants** – If TAs are present in the class roster, the user can choose whether to create TA repositories and whether TAs should receive read access to student repositories.
 
 7. **Processes the Class Roster** – Reads each entry in the CSV file, validates GitHub usernames, and creates the appropriate repositories based on each individual's role.
@@ -326,5 +328,6 @@ If a student repository cannot be created, verify that:
 - The authenticated GitHub account has the required permissions.
 
 Review the terminal output and configuration summary for additional information about errors encountered while processing the roster.
+
 
 ### [Back to Top!](#contents)
