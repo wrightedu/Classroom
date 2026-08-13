@@ -172,13 +172,20 @@ createTARepo() {
 
     echo "Creating TA repository $REPO_NAME"
 
-    gh repo create "$ORGANIZATION/$REPO_NAME" \
+    if gh repo create "$ORGANIZATION/$REPO_NAME" \
+        --template "$TEMPLATE" \
         --private >/dev/null </dev/null
+    then
+        gh api \
+            -X PUT \
+            "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
+            -f permission="push" >/dev/null </dev/null
 
-    gh api \
-        -X PUT \
-        "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
-        -f permission="push" >/dev/null </dev/null
+        return 0
+    else
+        echo "Error: Failed to create TA repository $REPO_NAME" >&2
+        return 1
+    fi
 }
 
 # Checks if the CSV file contains any TAs

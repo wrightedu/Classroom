@@ -287,7 +287,7 @@ processRoster() {
                 TAS+=("$EMAIL:$USERNAME")
 
                 if [[ "$CREATE_TA_REPOS" =~ ^[Yy]$ ]]; then
-                    createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM"
+                    createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
                 fi
                 ;;
 
