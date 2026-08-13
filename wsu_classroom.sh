@@ -6,6 +6,8 @@
 #       CLONE_DIR - Directory to clone the repositories into
 # Outputs:
 #       Clones the repositories into the specified directory
+# State Changes:
+#       Repositories are cloned into the specified directory
 cloneRepositories() {
 
     local REPO_FILE
@@ -76,6 +78,8 @@ cloneRepositories() {
 #       -C CSV_FILE - Class roster CSV file
 # Outputs:
 #       Creates repositories for students and TAs, grants TAs access to student repositories, and optionally clones the repositories to the local machine
+# State Changes:
+#       Repositories are created for students and TAs, TAs are granted access to student repositories, and repositories may be cloned to the local machine
 WSU_classroom() (
 
     # Declare local variables

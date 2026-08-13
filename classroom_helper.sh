@@ -3,6 +3,8 @@
 #       None
 # Outputs:
 #       Prints the usage information to the console
+# State Changes:
+#       None
 usage() {
     echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
     echo "  -h                Show this help message and exit"
@@ -22,6 +24,8 @@ usage() {
 #       CURRENT_TERM - Current academic term
 # Outputs:
 #       Grants the TA read access to the student's repository
+# State Changes:
+#       The TA is granted read access to the student's repository
 grantTAAccess() {
 
     # Declare local variables
@@ -56,6 +60,8 @@ grantTAAccess() {
 #       TEMPLATE - Template repository to use for creating the new repository
 # Outputs:
 #       Creates a private repository for the student and grants the student write access
+# State Changes:
+#       A private repository is created for the student, and the student is granted write access
 createStudentRepo() {
 
     # Declare local variables
@@ -98,6 +104,8 @@ createStudentRepo() {
 #       GENERATED_REPO_LINKS - Array of generated repository links
 # Outputs:
 #       Creates a CSV file containing the repository links
+# State Changes:
+#       A CSV file is created containing the repository links
 exportRepoLinks() {
 
     # Declare local variables
@@ -135,6 +143,8 @@ exportRepoLinks() {
 #       EMAIL - Email address to generate the identifier from
 # Outputs:
 #       Returns the unique identifier derived from the email address
+# State Changes:
+#       None
 generateEmailIdentifier() {
 
     # Declare local variables
@@ -155,6 +165,8 @@ generateEmailIdentifier() {
 #       CURRENT_TERM - Current academic term
 # Outputs:
 #       Creates a private repository for the TA and grants the TA write access
+# State Changes:
+#       A private repository is created for the TA, and the TA is granted write access
 createTARepo() {
 
     # Declare local variables
@@ -163,6 +175,7 @@ createTARepo() {
     local ORGANIZATION="$3"
     local ASSIGNMENT="$4"
     local CURRENT_TERM="$5"
+    local TEMPLATE="$6"
 
     local EMAIL_ID
     local REPO_NAME
@@ -192,7 +205,9 @@ createTARepo() {
 # Inputs:
 #       CSV_FILE - CSV file containing names, GitHub usernames, and roles
 # Outputs:
-#       Returns 0 (true) if the CSV file contains any TAs, otherwise returns
+#       Returns 0 (true) if the CSV file contains any TAs, otherwise returns 1 (false)
+# State Changes:
+#       None
 hasTAs() {
 
     # Declare local variables
@@ -226,6 +241,8 @@ hasTAs() {
 #       GRANT_TA_ACCESS - Flag indicating whether to grant TAs access to student repositories
 # Outputs:
 #       Prints a summary of the configuration and actions taken to the console
+# State Changes:
+#       None
 configurationSummary() {
 
     # Declare local variables
