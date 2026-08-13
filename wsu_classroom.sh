@@ -28,6 +28,8 @@ cloneRepositories() {
 
     # Ask where the repositories should be cloned
     read -p "Enter the directory to clone repositories into: " CLONE_DIR
+    # handling tildes
+    eval CLONE_DIR="$CLONE_DIR"
 
     # Create the directory if it does not exist
     if [[ ! -d "$CLONE_DIR" ]]; then
