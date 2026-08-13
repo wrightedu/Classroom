@@ -1,22 +1,3 @@
-# Checks if gh is installed to user's system
-# Inputs:
-#		None
-# Outputs:
-#		GH is installed or GH isnt installed and prompts user to install it
-# State Changes:
-#		None
-isGitInstalled() {
-	if gh --version >/dev/null 2>&1; then
-		echo "GH is installed."
-		return 0
-	else
-		echo "Error: GH is not installed"
-		echo "Please install it from:"
-		echo "https://cli.github.com/"
-		return 1
-	fi	
-}
-
 # Checks if the user is authenticated with GitHub using gh
 # Inputs:
 #		None

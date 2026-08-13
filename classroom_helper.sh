@@ -6,7 +6,7 @@
 # State Changes:
 #       None
 usage() {
-    echo "Usage: $0 [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
+    echo "Usage: WSU_classroom [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
     echo "  -h                Show this help message and exit"
     echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
     echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
