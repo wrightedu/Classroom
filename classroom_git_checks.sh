@@ -172,7 +172,7 @@ editRepoName() {
                 ;;
             4)
                 echo "Exiting..."
-                return 1
+                exit 1
                 ;;
             *)
                 echo "Invalid choice. Please enter a number between 1 and 4."
@@ -239,7 +239,7 @@ processRoster() {
     local TA_USERNAME
     local STUDENT
     local STUDENT_EMAIL
-    local GENERATED_REPO_LINKS
+    local GENERATED_REPO_LINKS=()
     local REPO_NAME
 
     # Read the CSV file line by line, skipping the header, and process each entry
