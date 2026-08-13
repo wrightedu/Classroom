@@ -3,6 +3,8 @@
 #		None
 # Outputs:
 #		GH is installed or GH isnt installed and prompts user to install it
+# State Changes:
+#		None
 isGitInstalled() {
 	if gh --version >/dev/null 2>&1; then
 		echo "GH is installed."
@@ -20,6 +22,8 @@ isGitInstalled() {
 #		None
 # Outputs:
 #		GH is authenticated or GH isnt authenticated and prompts user to authenticate
+# State Changes:
+#		None
 isGitAuth() {
 
     local choice
@@ -42,6 +46,8 @@ isGitAuth() {
 #		ORGANIZATION - the name of the GitHub organization
 # Outputs:
 #		Prints message whether the user is an owner of the organization or not
+# State Changes:
+#		None
 checkOrganizationOwnership() {
 
     # Declare local variables
@@ -70,6 +76,8 @@ checkOrganizationOwnership() {
 #		USERNAME - the GitHub username to check
 # Outputs:
 #		Returns 0 if the username is valid, 1 if not
+# State Changes:
+#		None
 isGitHubUserValid() {
 	local USERNAME="$1"
 
@@ -85,6 +93,8 @@ isGitHubUserValid() {
 #		None
 # Outputs:
 #		Prints the current academic term in the format of fYY, sYY, or suYY
+# State Changes:
+#		None
 getCurrentTerm() {
 
     # Declare local variables
@@ -114,6 +124,8 @@ getCurrentTerm() {
 #		TERM - the current academic term
 # Outputs:
 #		Prints the generated repository name in the format of assignment-emailidentifier-term
+# State Changes:
+#		None
 generateRepoName() {
     
     # Declare local variables
@@ -132,6 +144,8 @@ generateRepoName() {
 #		CURRENT_TERM - the current academic term
 # Outputs:
 #		Prints the final assignment name and term after user edits
+# State Changes:
+#		None
 editRepoName() {
 
     # Declare local variables
@@ -188,6 +202,8 @@ editRepoName() {
 #		TEMPLATE - the name of the template repository (in the format owner/repo)
 # Outputs:
 #		Prints message whether the template repository exists and is a template repository or not
+# State Changes:
+#		None
 checkTemplateRepo() {
     local TEMPLATE="$1"
     if ! gh repo view "$TEMPLATE" >/dev/null 2>&1; then
@@ -214,6 +230,8 @@ checkTemplateRepo() {
 #		GRANT_TA_ACCESS - Flag indicating whether to grant TAs access to student repositories (Y/N)
 # Outputs:
 #		Creates repositories for students and TAs, and grants access to TAs if specified
+# State Changes:
+#		Repositories are created for students and TAs, and TAs are granted access to student repositories if specified
 processRoster() {
 
     # Declare local variables
