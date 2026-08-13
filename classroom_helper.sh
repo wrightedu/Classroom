@@ -175,6 +175,7 @@ createTARepo() {
     local ORGANIZATION="$3"
     local ASSIGNMENT="$4"
     local CURRENT_TERM="$5"
+    local TEMPLATE="$6"
 
     local EMAIL_ID
     local REPO_NAME
