@@ -318,4 +318,6 @@ processRoster() {
             done
         done
     fi
+
+    exportRepoLinks "$ASSIGNMENT" "$CURRENT_TERM" "${GENERATED_REPO_LINKS[@]}"
 }
