@@ -4,7 +4,7 @@ set -e
 
 INSTALL_DIR="$HOME/.wsu_classroom"
 REPO="wrightedu/Classroom"
-BRANCH="development"
+BRANCH="main"
 
 echo "======================================"
 echo "       WSU Classroom Installer"
