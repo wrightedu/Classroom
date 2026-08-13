@@ -1,9 +1,8 @@
 #!/bin/bash
-
 # Function to clone repositories from a CSV file during the WSU Classroom script execution or as a standalone function
 # Inputs:
-#       REPO_FILE - CSV file containing repository names and links
-#       CLONE_DIR - Directory to clone the repositories into
+#       User input - CSV file containing repository names and links
+#       User input - Directory to clone the repositories into
 # Outputs:
 #       Clones the repositories into the specified directory
 # State Changes:
@@ -94,15 +93,10 @@ WSU_classroom() (
     local GRANT_TA_ACCESS="N"
     local CLONE
 
-    SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     source "$SCRIPT_DIR/classroom_git_checks.sh"
     source "$SCRIPT_DIR/classroom_helper.sh"
-
-    # if git is intalled run git authenticator
-    if ! isGitInstalled; then
-	    return 1
-    fi
 
     # check if the user is authenticated with GitHub
     isGitAuth
@@ -173,10 +167,10 @@ WSU_classroom() (
     # verify the CSV file exists
     if [[ ! -f "$CSV_FILE" ]]; then
         echo "Error: CSV file '$CSV_FILE' not found."
-        exit 1
+            return 1
     else
         echo "CSV file '$CSV_FILE' found."
-    fi
+    fi  
 
     # check if the CSV file contains TAs and prompt the user to create TA repositories and grant access to student repositories
     if hasTAs "$CSV_FILE"; then
@@ -191,7 +185,7 @@ WSU_classroom() (
 
     # allows the user to clone the student repositories to their local machine if they want
     echo
-    read -p "Would you like to clone the student repositories to your local machine? (Y/N)" CLONE
+    read -p "Would you like to clone the student repositories to your local machine? (Y/N): " CLONE
 
     if [[ "$CLONE" =~ ^[Yy]$ ]]; then
         cloneRepositories

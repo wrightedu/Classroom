@@ -209,7 +209,21 @@ WSU_classroom -h
 
 Repository cloning can also be performed separately from repository creation.
 
-Once the script is sourced to your .bashrc file, the `cloneRepositories` command will be available to use outside of repository generation.
+Once the script is sourced to your .bashrc file, the `cloneRepositories` command will be available to use outside of repository generation by using:
+
+```bash
+cloneRepositories
+```
+
+You will then be prompted with:
+
+```bash
+Enter the repository links CSV file: <your-output-file>
+Using repository links file: <your-output-file>
+Enter the directory to clone repositories into: <specified-directory>
+Directory does not exist. Create it? (Y/N): y
+Cloning StudentName: <generated-repo-name>
+```
 
 ## Class Roster Format
 
