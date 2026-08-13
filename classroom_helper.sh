@@ -229,24 +229,26 @@ configurationSummary() {
     local CSV_FILE="$5"
     local CREATE_TA_REPOS="$6"
     local GRANT_TA_ACCESS="$7"
-
     local STUDENT_COUNT=0
     local TA_COUNT=0
     local INSTRUCTOR_COUNT=0
-
-    local INVALID_USERNAMES=()
-
+    local INVALID_USERS=()
     local NAME
     local EMAIL
     local ROLE
     local USERNAME
+    local INVALID_USER
+    local INVALID_NAME
+    local INVALID_EMAIL
+    local INVALID_ROLE
+    local INVALID_USERNAME
 
-    # Read the CSV file and count the number of students, TAs, and instructors, and check for invalid GitHub usernames
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
         # Skip header
         [[ "$NAME" == "Name" ]] && continue
 
+        # Remove carriage returns
         NAME=${NAME//$'\r'/}
         EMAIL=${EMAIL//$'\r'/}
         ROLE=${ROLE//$'\r'/}
@@ -265,9 +267,9 @@ configurationSummary() {
                 ;;
         esac
 
-        # Check for invalid GitHub usernames
+        # Store information for invalid GitHub users
         if ! isGitHubUserValid "$USERNAME"; then
-            INVALID_USERNAMES+=("$USERNAME")
+            INVALID_USERS+=("$NAME|$EMAIL|$ROLE|$USERNAME")
         fi
 
     done < "$CSV_FILE"
@@ -286,19 +288,27 @@ configurationSummary() {
     echo "Students:              $STUDENT_COUNT"
     echo "TAs:                   $TA_COUNT"
     echo "Instructors:           $INSTRUCTOR_COUNT"
-    echo "Invalid usernames:     ${#INVALID_USERNAMES[@]}"
+    echo "Invalid usernames:     ${#INVALID_USERS[@]}"
     echo
     echo "Create TA repos:       $CREATE_TA_REPOS"
     echo "Grant TA access:       $GRANT_TA_ACCESS"
-    echo
 
-    if [[ ${#INVALID_USERNAMES[@]} -gt 0 ]]; then
+    if [[ ${#INVALID_USERS[@]} -gt 0 ]]; then
         echo
-        echo "Invalid GitHub usernames:"
+        echo "Invalid GitHub users:"
 
-        for USERNAME in "${INVALID_USERNAMES[@]}"
+        for INVALID_USER in "${INVALID_USERS[@]}"
         do
-            echo "  - $USERNAME"
+            IFS='|' read -r \
+                INVALID_NAME \
+                INVALID_EMAIL \
+                INVALID_ROLE \
+                INVALID_USERNAME <<< "$INVALID_USER"
+
+            echo
+            echo "  $INVALID_NAME ($INVALID_ROLE)"
+            echo "    Email:     $INVALID_EMAIL"
+            echo "    Username:  $INVALID_USERNAME"
         done
     fi
 

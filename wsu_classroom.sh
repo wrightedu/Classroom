@@ -183,9 +183,6 @@ WSU_classroom() (
     # process the class roster and create repositories
     processRoster "$CSV_FILE" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE" "$CREATE_TA_REPOS" "$GRANT_TA_ACCESS"
 
-    # creates file of student repo links for the instructor to use
-    exportRepoLinks
-
     # allows the user to clone the student repositories to their local machine if they want
     echo
     read -p "Would you like to clone the student repositories to your local machine? (Y/N)" CLONE
