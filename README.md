@@ -291,12 +291,12 @@ At the end of execution, WSU Classroom displays a configuration summary containi
 - Assignment
 - Academic term
 - Template repository
-- Class roster
+- Class roster (input csv)
 - Number of students, TAs, and instructors
 - Number of invalid GitHub usernames
 - Number of successfully created repositories
-- TA repository and access selections
-- Repository naming format
+- TA repository and TA repository access selections
+- If invalid Github usernames were found, presents name and email of invalid name found 
 
 ## Troubleshooting
 
