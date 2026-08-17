@@ -250,17 +250,7 @@ When WSU Classroom is run, the tool performs the following steps:
 
 ![Configuration Summary Output](./screenshots/config-summary.png)
 
-## Generated Output
-
-After WSU Classroom finishes processing the class roster, several outputs may be generated.
-
-### GitHub Repositories
-
-Private repositories are created for valid students in the specified GitHub organization. Each student is granted access to their assigned repository.
-
-If selected by the user, repositories may also be created for TAs and TAs may be granted read access to student repositories.
-
-### Repository Links CSV
+## Output - Repository Links CSV
 
 A CSV file containing the names of students and links to their generated repositories is automatically created.
 
