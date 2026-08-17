@@ -244,7 +244,7 @@ When WSU Classroom is run, the tool performs the following steps:
 
 ![New Directory of Cloned Repositories](./screenshots/cloned-repos.png)
 
-12. **Displays a Configuration Summary** – Displays the configuration and results of the completed operation, including roster counts, invalid usernames, and successfully created repositories.
+12. **Displays a Configuration Summary** – Displays the configuration and results of the completed operation, including roster counts and invalid usernames.
 
 ![Configuration Summary Output](./screenshots/config-summary.png)
 
