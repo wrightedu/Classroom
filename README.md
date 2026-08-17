@@ -206,9 +206,6 @@ The academic term is automatically determined based on the current date:
 - **July–November:** Fall (fYY)
 - **December:** Spring of the following year (sYY)
 
-> [!TIP]
-> There is an option to make your own repository name if you do not like the generated repository name!
-
 ## How it Works
 
 When WSU Classroom is run, the tool performs the following steps:
