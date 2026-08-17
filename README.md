@@ -150,6 +150,8 @@ Get GitHub usernames:
 
 Role may be requested as well. Recommend a default / static role of Student, then to manually change role to TA where required.
 
+Data will need to be reformatted into a csv with the requirements below.
+
 ### Input CSV Format
 
 The CSV file must use the following column format:
