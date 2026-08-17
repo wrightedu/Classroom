@@ -23,165 +23,79 @@ The tool uses the GitHub CLI to interact with GitHub organizations, create repos
 
 - **Automated Repository Creation** – Creates private repositories for students using a specified GitHub template repository.
 - **Roster-Based Creation** – Uses a CSV class roster containing student, TA, and instructor information to determine repository creation and access.
-- **Repository Naming** – Automatically generates consistent repository names using the assignment name, email identifier, and current academic term. The assignment name and academic term can be edited before repository creation.
+- **Repository Naming** – Automatically generates consistent repository names using the assignment name, student's email identifier, and current academic term.
 - **GitHub Validation** – Verifies GitHub CLI installation and authentication, organization ownership, GitHub usernames, and template repositories before performing repository operations.
-- **Teaching Assistant Support** – Optionally creates repositories for TAs using the specified template repository and grants TAs read access to student repositories.
-- **Repository Link Export** – Generates a CSV file containing student names and links to their newly created repositories and is sorted alphabetically by last name.
-- **Repository Cloning** – Provides the option to clone student repositories to a specified local directory using a repository-links CSV file. Repository cloning can also be run separately from repository creation.
-- **Configuration Summary** – Displays a summary after processing, including course configuration, roster counts, invalid GitHub usernames, and TA repository/access selections.
+- **Teaching Assistant Support** – Options to creates repositories for TAs and grant TAs read access to student repositories.
+- **Repository Link Export** – Generates a CSV file containing student names and links to their newly created repositories. Output is sorted alphabetically by last name.
+- **Repository Cloning** – Provides the option to clone all created student repositories to a specified local directory.
+- **Configuration Summary** – Displays a summary after processing, including roster counts and invalid GitHub usernames.
 
 ## Prerequisites
 
-### System Requirements
-
-| Requirement | Minimum Version | Purpose |
-| --- | --- | --- |
-| **Bash** | 3.2+ | Runs WSU Classroom and its supporting scripts. |
-| **Git** | 2.0+ | Installs and updates WSU Classroom and handles repository operations. |
-| **GitHub CLI (`gh`)** | 2.0+ | Interacts with GitHub organizations, repositories, collaborators, and users. |
-
-> [!NOTE]
-> Newer versions are recommended when available.
-
-You can check the installed versions with:
-
-```bash
-bash --version
-git --version
-gh --version
-```
-
-The installation script automatically checks whether Git and the GitHub CLI are installed before continuing.
-
-### GitHub Authentication
-
-The GitHub CLI must be authenticated with the GitHub account that will be used to manage classroom repositories.
-
-Check the current authentication status with:
-
-```bash
-gh auth status
-```
-
-If you are not authenticated, log in with:
-
-```bash
-gh auth login
-```
-
-The installation script verifies GitHub CLI authentication before installing WSU Classroom.
-
-### GitHub Organization Access
-
-The authenticated GitHub account must have the required administrative access to the GitHub organization where classroom repositories will be created.
-
-WSU Classroom verifies organization access before creating repositories.
-
-### Template Repository
-
-A GitHub template repository must exist before creating classroom repositories.
-
-The template repository must:
-
-- Exist on GitHub.
-- Be accessible by the authenticated GitHub account.
-- Be configured as a GitHub template repository.
-
-### Class Roster CSV File
-
-A class roster CSV file is required when creating classroom repositories.
-
-The roster must contain the following columns:
-
-```csv
-Name,Email,Role,Username
-```
-
-Additional information about the required roster structure can be found in the [Class Roster Format](#class-roster-format) section.
+- Bash
+    - Bash through WSL2 is sufficient
+- Git
+- GitHub CLI installed & authenticated
+- GitHub Organization
+    - User should be Owner in GitHub Org
+- Template repository
+    - template repository may be blank, but must exist.
+    - template repositories must be public and the Template Repository setting enabled
+- Class Roster CSV File
 
 ## Installation
 
-WSU Classroom includes an installation script that automatically installs and configures the tool for the current user.
-
 1. **Clone the Repository**
 
-Clone the WSU Classroom repository to your local machine:
+Clone the WSU Classroom repository:
 
 ```bash
 git clone git@github.com:wrightedu/Classroom.git
 ```
 
-Then navigate into the cloned repository:
+Then navigate into the cloned repository.
+
+2. **Keep the Repository Up to Date**
+
+Before using WSU Classroom, make sure your local copy is up to date:
 
 ```bash
-cd Classroom
+git pull
 ```
 
-2. **Make the Installer Executable**
+3. **Source WSU Classroom**
 
-Give the installation script execute permission:
+WSU Classroom is intended to be sourced so that the `WSU_classroom` command is available from the user's shell.
+
+Add the following line to your `~/.bashrc`, replacing the path with the location of your cloned WSU Classroom repository:
 
 ```bash
-chmod +x install.sh
+source /path/to/wsu-classroom/wsu_classroom.sh
 ```
 
-3. **Run the Installer**
+4. **Reload the Shell Configuration**
 
-Run the installation script:
-
-```bash
-./install.sh
-```
-
-The installer will:
-
-- Verify that Git is installed.
-- Verify that the GitHub CLI (gh) is installed.
-- Verify that the user is authenticated with GitHub.
-- Install WSU Classroom to: `~/.wsu_classroom`
-- Check for and update an existing WSU Classroom installation.
-- Configure the user's shell so that WSU Classroom is automatically sourced.
-- Prevent duplicate WSU Classroom configuration entries from being added to the shell configuration.
-
-4. **Activate WSU Classroom**
-
-After installation, restart the terminal.
-
-Alternatively, reload the shell configuration in the current terminal:
+After updating `~/.bashrc`, reload the configuration:
 
 ```bash
 source ~/.bashrc
 ```
 
-5. **Verify the Installation**
+Alternatively, close and reopen the terminal.
 
-Verify that WSU Classroom is available by running:
-
-```bash
-WSU_classroom -h
-```
-
-If the installation was successful, the WSU Classroom help menu will be displayed.
-
-> [!NOTE]
-> After the initial installation and shell reload, WSU_classroom will automatically be available in future terminal sessions.
-
-### Updating WSU Classroom
-
-The installer can also be run again to update an existing installation:
-
-```bash
-./install.sh
-```
-
-If WSU Classroom is already installed, the installer will check the existing installation for updates rather than creating a second installation.
+Once configured, the `WSU_classroom` command will be available from the command line.
 
 ## Usage
 
 Once WSU Classroom has been installed and configured, run the tool using the `WSU_classroom `command.
 
 ```bash
-WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>
+WSU_classroom -O <organization> -A <assignment> -T <template> -C <path_to_csv_file>
+```
+
+Example:
+```bash
+WSU_classroom -C demo-files/duncan_demo_restore.csv -O WSU-kduncan -A test5 -T pattonsgirl/CEG2350-LabTemplate
 ```
 
 **Flags**
@@ -191,11 +105,11 @@ WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>
 | `-h` | None | Displays the help message and exits. |
 | `-O` | Organization | Specifies the GitHub organization where repositories will be created. |
 | `-A` | Assignment | Specifies the assignment name used to generate repository names. |
-| `-T` | Template | Specifies the GitHub template repository used to create student and TA repositories. |
+| `-T` | Template | Specifies the GitHub template repository used to create student repositories. |
 | `-C` | CSV File | Specifies the class roster CSV file to process. |
 
 > [!IMPORTANT]  
-> The `-O`, `-A`, `-T`, and `-C` options are required when running the `WSU_classroom` command.
+> The `-O`, `-A`, `-T`, and `-C` options are required.
 
 When the command is run, WSU Classroom validates the provided configuration and processes the class roster. During execution, the user may be prompted for additional options, including TA repository creation, TA access to student repositories, and cloning student repositories to the local machine.
 
@@ -205,40 +119,58 @@ Use the help option to display the available command-line options:
 WSU_classroom -h
 ```
 
-### Cloning Repositories Separately
-
-Repository cloning can also be performed separately from repository creation.
-
-Once the script is sourced to your .bashrc file, the `cloneRepositories` command will be available to use outside of repository generation by using:
-
-```bash
-cloneRepositories
-```
-
-You will then be prompted with:
-
-```bash
-Enter the repository links CSV file: <your-output-file>
-Using repository links file: <your-output-file>
-Enter the directory to clone repositories into: <specified-directory>
-Directory does not exist. Create it? (Y/N): y
-Cloning StudentName: <generated-repo-name>
-```
-
 ## Class Roster Format
 
-WSU Classroom requires a CSV file containing the class roster and majority of it can be obtained from Pilot. The CSV file must use the following column format:
+WSU Classroom requires a CSV file containing the class roster.
+
+### Pilot
+Get Roles: 
+1. Go to Classlist
+2. Make sure All is selected if you would like to include TAs, select all names
+3. Select Export.
+
+Get *Student* Emails:
+1. Go to Grades
+2. Select "Download Grades as CSV"
+3. Make sure Details of Last Name, First Name, Email are selected
+    - You may deselect grades / graded items in the export
+
+Merge these sheets using tool of choice.
+
+TA and co-faculty emails will need to be manually aggregated.
+
+Get GitHub usernames:
+1. Create a Pilot quiz that asks for GitHub usernames.
+2. Export the quiz data.
+3. Merge results using tool of choice.
+
+### Office Forms
+
+1. Go to [https://forms.cloud.microsoft/](https://forms.cloud.microsoft/)
+2. Create a New Quiz
+    - It is recommended to give the quiz name the course title and semester
+3. Add a required question prompting for their GitHub username
+4. Check that the form settings that "Only people in Wright State University can respond" **and** make sure "Record Name" is selected
+    - Record name will auto populate the respondent's name and email
+
+Role may be requested as well. Recommend a default / static role of Student, then to manually change role to TA where required.
+
+Data will need to be reformatted into a csv with the requirements below.
+
+### Input CSV Format
+
+The CSV file must use the following column format:
 
 ```csv
 Name,Email,Role,Username
 ```
 
-| Column | Description | Get From Pilot? |
+| Column | Description | Data Source |
 | --- | --- | --- |
-| `Name` | The first and last name of the roster member. | Yes |
-| `Email` | The email address used to generate the repository identifier. | Yes |
-| `Role` | The individual's role in the course. | Yes |
-| `Username` | The individual's GitHub username. | No |
+| `Name` | The first and last name of the roster member. | Pilot |
+| `Email` | The email address used to generate the repository identifier. | Pilot |
+| `Role` | The individual's role in the course. | Pilot |
+| `Username` | The individual's GitHub username. | Quiz |
 
 ### Supported Roles
 
@@ -246,7 +178,7 @@ The following roles are supported:
 
 - **Student** – A student repository is created using the specified template repository.
 - **TA** – Can optionally receive a repository and read access to student repositories.
-- **Teacher / Instructor** – Identifies the course instructor. No repository is created.
+- **Faculty** – Identifies the course instructor. No repository is created.
 
 ## Repository Naming
 
@@ -281,9 +213,6 @@ The academic term is automatically determined based on the current date:
 - **July–November:** Fall (fYY)
 - **December:** Spring of the following year (sYY)
 
-> [!TIP]
-> There is an option to make your own repository name if you do not like the generated repository name!
-
 ## How it Works
 
 When WSU Classroom is run, the tool performs the following steps:
@@ -298,7 +227,7 @@ When WSU Classroom is run, the tool performs the following steps:
 
 ![Validates Authentication and Arguments](./screenshots/validates-all-args.png)
 
-5. **Confirms Repository Naming** – Generates the repository naming format and allows the user to modify the assignment name or academic term before continuing.
+5. **Confirms Repository Naming** – Generates the repository naming format and allows the user to modify the assignment, term, or repository naming before continuing.
 
 ![Confirm Name for Repositories](./screenshots/confirm-choice.png)
 
@@ -306,38 +235,27 @@ When WSU Classroom is run, the tool performs the following steps:
 
 7. **Processes the Class Roster** – Reads each entry in the CSV file, validates GitHub usernames, and creates the appropriate repositories based on each individual's role.
 
-8. **Creates Student Repositories** – Creates private student repositories from the specified template and grants each student write access to their repository.
+8. **Creates Student Repositories** – Creates private student repositories from the specified template and grants each student access to their repository.
 
-9. **Creates TA Repositories** – If selected, creates private TA repositories from the specified template and grants each TA write access to their repository.
+9. **Grant TA Access** – If selected, gives TAs read access to the student repositories.
 
 ![Grant TA Access](./screenshots/granting-ta-access.png)
 
-10. **Grants TA Access** – If selected, gives TAs read access to the student
-repositories.
-
-11. **Exports Repository Links** – Creates a CSV file containing student names and links to their generated repositories.
+10. **Exports Repository Links** – Creates a CSV file containing student names and links to their generated repositories.
 
 ![Output File of Repository Links](./screenshots/output-file.png)
 
-12. **Offers Repository Cloning** – Prompts the user to optionally clone all student repositories to a local directory.
+11. **Offers Repository Cloning** – Prompts the user to optionally clone all student repositories to a local directory.
 
 ![Offers to Clone Repos](./screenshots/cloning-option-yes.png)
 
 ![New Directory of Cloned Repositories](./screenshots/cloned-repos.png)
 
-13. **Displays a Configuration Summary** – Displays the configuration and results of the completed operation, including roster counts, invalid usernames, and successfully created repositories.
+12. **Displays a Configuration Summary** – Displays the configuration and results of the completed operation, including roster counts and invalid usernames.
 
 ![Configuration Summary Output](./screenshots/config-summary.png)
 
-## Generated Output
-
-After WSU Classroom finishes processing the class roster, several outputs may be generated.
-
-### GitHub Repositories
-
-Private repositories are created for valid students in the specified GitHub organization. Each student is granted access to their assigned repository.
-
-If selected by the user, private repositories are also created for TAs using the selected template repository. Each TA is granted write access to their TA repository. TAs may also optionally be granted read access to student repositories.
+## Outputs
 
 ### Repository Links CSV
 
@@ -373,10 +291,12 @@ At the end of execution, WSU Classroom displays a configuration summary containi
 - Assignment
 - Academic term
 - Template repository
-- Class roster
+- Class roster (input csv)
 - Number of students, TAs, and instructors
 - Number of invalid GitHub usernames
-- TA repository and access selections
+- Number of successfully created repositories
+- TA repository and TA repository access selections
+- If invalid Github usernames were found, presents name and email of invalid name found 
 
 ## Troubleshooting
 
@@ -447,7 +367,7 @@ Verify that each roster entry generates a unique email identifier before running
 
 ### Repository Creation Failure
 
-If a student or TA repository cannot be created, verify that:
+If a student repository cannot be created, verify that:
 
 - The organization is correct.
 - The template repository is accessible.
@@ -456,13 +376,5 @@ If a student or TA repository cannot be created, verify that:
 
 Review the terminal output and configuration summary for additional information about errors encountered while processing the roster.
 
-### Repository Cloning Failure
-
-If repositories cannot be cloned, verify that:
-
-- The repository-links CSV exists.
-- The CSV contains valid repository links.
-- The authenticated GitHub account has access to the repositories.
-- The selected destination directory is accessible.
 
 ### [Back to Top!](#contents)
