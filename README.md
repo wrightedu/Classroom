@@ -23,27 +23,31 @@ The tool uses the GitHub CLI to interact with GitHub organizations, create repos
 
 - **Automated Repository Creation** – Creates private repositories for students using a specified GitHub template repository.
 - **Roster-Based Creation** – Uses a CSV class roster containing student, TA, and instructor information to determine repository creation and access.
-- **Repository Naming** – Automatically generates consistent repository names using the assignment name, student's email identifier, and current academic term. There is also an option to completely override the name that is generated.
+- **Repository Naming** – Automatically generates consistent repository names using the assignment name, student's email identifier, and current academic term.
 - **GitHub Validation** – Verifies GitHub CLI installation and authentication, organization ownership, GitHub usernames, and template repositories before performing repository operations.
-- **Teaching Assistant Support** – Optionally creates repositories for TAs and grants TAs read access to student repositories if there are TAs in the roster and is read as a role.
-- **Repository Link Export** – Generates a CSV file containing student names and links to their newly created repositories and is sorted alphabetically by last name.
-- **Repository Cloning** – Provides the option to clone all created student repositories to a specified local directory. Will also create a directory if you would like one.
-- **Configuration Summary** – Displays a summary after processing, including course configuration, roster counts, invalid GitHub usernames, and successfully created repositories.
+- **Teaching Assistant Support** – Options to creates repositories for TAs and grant TAs read access to student repositories.
+- **Repository Link Export** – Generates a CSV file containing student names and links to their newly created repositories. Output is sorted alphabetically by last name.
+- **Repository Cloning** – Provides the option to clone all created student repositories to a specified local directory.
+- **Configuration Summary** – Displays a summary after processing, including roster counts and invalid GitHub usernames.
 
 ## Prerequisites
 
 - Bash
+    - Bash through WSL2 is sufficient
 - Git
-- GitHub CLI & Authenticated
-- GitHub Organization Access
-- Template Repository
+- GitHub CLI installed & authenticated
+- GitHub Organization
+    - User should be Owner in GitHub Org
+- Template repository
+    - template repository may be blank, but must exist.
+    - template repositories must be public and the Template Repository setting enabled
 - Class Roster CSV File
 
 ## Installation
 
 1. **Clone the Repository**
 
-Clone the WSU Classroom repository to your local machine:
+Clone the WSU Classroom repository:
 
 ```bash
 git clone git@github.com:wrightedu/Classroom.git
@@ -77,7 +81,6 @@ After updating `~/.bashrc`, reload the configuration:
 source ~/.bashrc
 ```
 
-
 Alternatively, close and reopen the terminal.
 
 Once configured, the `WSU_classroom` command will be available from the command line.
@@ -87,7 +90,12 @@ Once configured, the `WSU_classroom` command will be available from the command 
 Once WSU Classroom has been installed and configured, run the tool using the `WSU_classroom `command.
 
 ```bash
-WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>
+WSU_classroom -O <organization> -A <assignment> -T <template> -C <path_to_csv_file>
+```
+
+Example:
+```bash
+WSU_classroom -C demo-files/duncan_demo_restore.csv -O WSU-kduncan -A test5 -T pattonsgirl/CEG2350-LabTemplate
 ```
 
 **Flags**
@@ -113,18 +121,56 @@ WSU_classroom -h
 
 ## Class Roster Format
 
-WSU Classroom requires a CSV file containing the class roster and majority of it can be obtained from Pilot. The CSV file must use the following column format:
+WSU Classroom requires a CSV file containing the class roster.
+
+### Pilot
+Get Roles: 
+1. Go to Classlist
+2. Make sure All is selected if you would like to include TAs, select all names
+3. Select Export.
+
+Get *Student* Emails:
+1. Go to Grades
+2. Select "Download Grades as CSV"
+3. Make sure Details of Last Name, First Name, Email are selected
+    - You may deselect grades / graded items in the export
+
+Merge these sheets using tool of choice.
+
+TA and co-faculty emails will need to be manually aggregated.
+
+Get GitHub usernames:
+1. Create a Pilot quiz that asks for GitHub usernames.
+2. Export the quiz data.
+3. Merge results using tool of choice.
+
+### Office Forms
+
+1. Go to [https://forms.cloud.microsoft/](https://forms.cloud.microsoft/)
+2. Create a New Quiz
+    - It is recommended to give the quiz name the course title and semester
+3. Add a required question prompting for their GitHub username
+4. Check that the form settings that "Only people in Wright State University can respond" **and** make sure "Record Name" is selected
+    - Record name will auto populate the respondent's name and email
+
+Role may be requested as well. Recommend a default / static role of Student, then to manually change role to TA where required.
+
+Data will need to be reformatted into a csv with the requirements below.
+
+### Input CSV Format
+
+The CSV file must use the following column format:
 
 ```csv
 Name,Email,Role,Username
 ```
 
-| Column | Description | Get From Pilot? |
+| Column | Description | Data Source |
 | --- | --- | --- |
-| `Name` | The first and last name of the roster member. | Yes |
-| `Email` | The email address used to generate the repository identifier. | Yes |
-| `Role` | The individual's role in the course. | Yes |
-| `Username` | The individual's GitHub username. | No |
+| `Name` | The first and last name of the roster member. | Pilot |
+| `Email` | The email address used to generate the repository identifier. | Pilot |
+| `Role` | The individual's role in the course. | Pilot |
+| `Username` | The individual's GitHub username. | Quiz |
 
 ### Supported Roles
 
@@ -132,7 +178,7 @@ The following roles are supported:
 
 - **Student** – A student repository is created using the specified template repository.
 - **TA** – Can optionally receive a repository and read access to student repositories.
-- **Teacher / Instructor** – Identifies the course instructor. No repository is created.
+- **Faculty** – Identifies the course instructor. No repository is created.
 
 ## Repository Naming
 
@@ -166,9 +212,6 @@ The academic term is automatically determined based on the current date:
 - **April–June:** Summer (suYY)
 - **July–November:** Fall (fYY)
 - **December:** Spring of the following year (sYY)
-
-> [!TIP]
-> There is an option to make your own repository name if you do not like the generated repository name!
 
 ## How it Works
 
@@ -208,19 +251,11 @@ When WSU Classroom is run, the tool performs the following steps:
 
 ![New Directory of Cloned Repositories](./screenshots/cloned-repos.png)
 
-12. **Displays a Configuration Summary** – Displays the configuration and results of the completed operation, including roster counts, invalid usernames, and successfully created repositories.
+12. **Displays a Configuration Summary** – Displays the configuration and results of the completed operation, including roster counts and invalid usernames.
 
 ![Configuration Summary Output](./screenshots/config-summary.png)
 
-## Generated Output
-
-After WSU Classroom finishes processing the class roster, several outputs may be generated.
-
-### GitHub Repositories
-
-Private repositories are created for valid students in the specified GitHub organization. Each student is granted access to their assigned repository.
-
-If selected by the user, repositories may also be created for TAs and TAs may be granted read access to student repositories.
+## Outputs
 
 ### Repository Links CSV
 
@@ -256,12 +291,12 @@ At the end of execution, WSU Classroom displays a configuration summary containi
 - Assignment
 - Academic term
 - Template repository
-- Class roster
+- Class roster (input csv)
 - Number of students, TAs, and instructors
 - Number of invalid GitHub usernames
 - Number of successfully created repositories
-- TA repository and access selections
-- Repository naming format
+- TA repository and TA repository access selections
+- If invalid Github usernames were found, presents name and email of invalid name found 
 
 ## Troubleshooting
 
