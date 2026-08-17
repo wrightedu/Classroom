@@ -158,12 +158,12 @@ The CSV file must use the following column format:
 Name,Email,Role,Username
 ```
 
-| Column | Description | Get From Pilot? |
+| Column | Description | Data Source |
 | --- | --- | --- |
-| `Name` | The first and last name of the roster member. | Yes |
-| `Email` | The email address used to generate the repository identifier. | Yes |
-| `Role` | The individual's role in the course. | Yes |
-| `Username` | The individual's GitHub username. | No |
+| `Name` | The first and last name of the roster member. | Pilot |
+| `Email` | The email address used to generate the repository identifier. | Pilot |
+| `Role` | The individual's role in the course. | Pilot |
+| `Username` | The individual's GitHub username. | Quiz |
 
 ### Supported Roles
 
@@ -171,7 +171,7 @@ The following roles are supported:
 
 - **Student** – A student repository is created using the specified template repository.
 - **TA** – Can optionally receive a repository and read access to student repositories.
-- **Teacher / Instructor** – Identifies the course instructor. No repository is created.
+- **Faculty** – Identifies the course instructor. No repository is created.
 
 ## Repository Naming
 
