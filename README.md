@@ -47,7 +47,7 @@ The tool uses the GitHub CLI to interact with GitHub organizations, create repos
 
 1. **Clone the Repository**
 
-Clone the WSU Classroom repository to your local machine:
+Clone the WSU Classroom repository:
 
 ```bash
 git clone git@github.com:wrightedu/Classroom.git
@@ -80,7 +80,6 @@ After updating `~/.bashrc`, reload the configuration:
 ```bash
 source ~/.bashrc
 ```
-
 
 Alternatively, close and reopen the terminal.
 
@@ -117,7 +116,43 @@ WSU_classroom -h
 
 ## Class Roster Format
 
-WSU Classroom requires a CSV file containing the class roster and majority of it can be obtained from Pilot. The CSV file must use the following column format:
+WSU Classroom requires a CSV file containing the class roster.
+
+### Pilot
+Get Roles: 
+1. Go to Classlist
+2. Make sure All is selected if you would like to include TAs, select all names
+3. Select Export.
+
+Get *Student* Emails:
+1. Go to Grades
+2. Select "Download Grades as CSV"
+3. Make sure Details of Last Name, First Name, Email are selected
+    - You may deselect grades / graded items in the export
+
+Merge these sheets using tool of choice.
+
+TA and co-faculty emails will need to be manually aggregated.
+
+Get GitHub usernames:
+1. Create a Pilot quiz that asks for GitHub usernames.
+2. Export the quiz data.
+3. Merge results using tool of choice.
+
+### Office Forms
+
+1. Go to [https://forms.cloud.microsoft/](https://forms.cloud.microsoft/)
+2. Create a New Quiz
+    - It is recommended to give the quiz name the course title and semester
+3. Add a required question prompting for their GitHub username
+4. Check that the form settings that "Only people in Wright State University can respond" **and** make sure "Record Name" is selected
+    - Record name will auto populate the respondent's name and email
+
+Role may be requested as well. Recommend a default / static role of Student, then to manually change role to TA where required.
+
+### Input CSV Format
+
+The CSV file must use the following column format:
 
 ```csv
 Name,Email,Role,Username
