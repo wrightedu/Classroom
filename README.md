@@ -23,20 +23,24 @@ The tool uses the GitHub CLI to interact with GitHub organizations, create repos
 
 - **Automated Repository Creation** – Creates private repositories for students using a specified GitHub template repository.
 - **Roster-Based Creation** – Uses a CSV class roster containing student, TA, and instructor information to determine repository creation and access.
-- **Repository Naming** – Automatically generates consistent repository names using the assignment name, student's email identifier, and current academic term. There is also an option to completely override the name that is generated.
+- **Repository Naming** – Automatically generates consistent repository names using the assignment name, student's email identifier, and current academic term.
 - **GitHub Validation** – Verifies GitHub CLI installation and authentication, organization ownership, GitHub usernames, and template repositories before performing repository operations.
-- **Teaching Assistant Support** – Optionally creates repositories for TAs and grants TAs read access to student repositories if there are TAs in the roster and is read as a role.
-- **Repository Link Export** – Generates a CSV file containing student names and links to their newly created repositories and is sorted alphabetically by last name.
-- **Repository Cloning** – Provides the option to clone all created student repositories to a specified local directory. Will also create a directory if you would like one.
-- **Configuration Summary** – Displays a summary after processing, including course configuration, roster counts, invalid GitHub usernames, and successfully created repositories.
+- **Teaching Assistant Support** – Options to creates repositories for TAs and grant TAs read access to student repositories.
+- **Repository Link Export** – Generates a CSV file containing student names and links to their newly created repositories. Output is sorted alphabetically by last name.
+- **Repository Cloning** – Provides the option to clone all created student repositories to a specified local directory.
+- **Configuration Summary** – Displays a summary after processing, including roster counts and invalid GitHub usernames.
 
 ## Prerequisites
 
 - Bash
+    - Bash through WSL2 is sufficient
 - Git
-- GitHub CLI & Authenticated
-- GitHub Organization Access
-- Template Repository
+- GitHub CLI installed & authenticated
+- GitHub Organization
+    - User should be Owner in GitHub Org
+- Template repository
+    - template repository may be blank, but must exist.
+    - template repositories must be public and the Template Repository setting enabled
 - Class Roster CSV File
 
 ## Installation
