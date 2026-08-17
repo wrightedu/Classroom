@@ -90,7 +90,12 @@ Once configured, the `WSU_classroom` command will be available from the command 
 Once WSU Classroom has been installed and configured, run the tool using the `WSU_classroom `command.
 
 ```bash
-WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>
+WSU_classroom -O <organization> -A <assignment> -T <template> -C <path_to_csv_file>
+```
+
+Example:
+```bash
+WSU_classroom -C demo-files/duncan_demo_restore.csv -O WSU-kduncan -A test5 -T pattonsgirl/CEG2350-LabTemplate
 ```
 
 **Flags**
@@ -250,7 +255,9 @@ When WSU Classroom is run, the tool performs the following steps:
 
 ![Configuration Summary Output](./screenshots/config-summary.png)
 
-## Output - Repository Links CSV
+## Outputs
+
+### Repository Links CSV
 
 A CSV file containing the names of students and links to their generated repositories is automatically created.
 
