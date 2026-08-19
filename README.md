@@ -2,13 +2,17 @@
 
 ## Quick Start Guide
 
-- Clone this repo
+- Clone this repo: `git@github.com:wrightedu/Classroom.git`
 - Install and authenticate the GitHub `gh` tool ([Install Here](https://cli.github.com/))
-- Source the main file in your `~/.bashrc`
-- get your data from the students...
-    -  We recommend a pilot quiz but anything will do that get the student's github usernames and their campus email addresses
-- run the tool to create an assignment for your class
-    -  explain what this means quickly
+- Source the `wsu_classroom.sh` file 
+    - Or add `source /path/to/wsu-classroom/wsu_classroom.sh` to your `~/.bashrc` and reload
+- Get Name, Email, GitHub Username, and Role for your course students
+    - Follow requirements in [Input CSV Format](#input-csv-format)
+    - Would recommend Pilot quiz so that instructors can require student participation
+        - Standard quiz format coming soon
+        - Script to convert to CSV and add Role per requirements coming soon
+- Run `WSU_classroom -O <organization> -A <assignment> -T <template> -C <path_to_csv_file>`
+    - See [Usage](#usage) for notes
 
 ## Contents
 
