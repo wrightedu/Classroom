@@ -4,7 +4,7 @@
 
 - Clone this repo: `git@github.com:wrightedu/Classroom.git`
 - Install and authenticate the GitHub `gh` tool ([Install Here](https://cli.github.com/))
-- Source the `wsu_classroom.sh` file 
+- Run the `install.sh` script OR `source` the `wsu_classroom.sh` file 
     - Or add `source /path/to/wsu-classroom/wsu_classroom.sh` to your `~/.bashrc` and reload
 - Get Name, Email, GitHub Username, and Role for your course students
     - Follow requirements in [Class Roster Format](#classroom-roster-format)
