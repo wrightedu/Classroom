@@ -7,7 +7,7 @@
 - Source the `wsu_classroom.sh` file 
     - Or add `source /path/to/wsu-classroom/wsu_classroom.sh` to your `~/.bashrc` and reload
 - Get Name, Email, GitHub Username, and Role for your course students
-    - Follow requirements in [Input CSV Format](#input-csv-format)
+    - Follow requirements in [Class Roster Format](#classroom-roster-format)
     - Would recommend Pilot quiz so that instructors can require student participation
         - Standard quiz format coming soon
         - Script to convert to CSV and add Role per requirements coming soon
@@ -20,8 +20,8 @@
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Usage](#usage)
 - [Class Roster Format](#class-roster-format)
+- [Usage](#usage)
 - [Repository Naming](#repository-naming)
 - [How It Works](#how-it-works)
 - [Generated Output](#generated-output)
@@ -135,44 +135,6 @@ WSU_classroom -h
 
 ## Class Roster Format
 
-WSU Classroom requires a CSV file containing the class roster.
-
-### Pilot
-Get Roles: 
-1. Go to Classlist
-2. Make sure All is selected if you would like to include TAs, select all names
-3. Select Export.
-
-Get *Student* Emails:
-1. Go to Grades
-2. Select "Download Grades as CSV"
-3. Make sure Details of Last Name, First Name, Email are selected
-    - You may deselect grades / graded items in the export
-
-Merge these sheets using tool of choice.
-
-TA and co-faculty emails will need to be manually aggregated.
-
-Get GitHub usernames:
-1. Create a Pilot quiz that asks for GitHub usernames.
-2. Export the quiz data.
-3. Merge results using tool of choice.
-
-### Office Forms
-
-1. Go to [https://forms.cloud.microsoft/](https://forms.cloud.microsoft/)
-2. Create a New Quiz
-    - It is recommended to give the quiz name the course title and semester
-3. Add a required question prompting for their GitHub username
-4. Check that the form settings that "Only people in Wright State University can respond" **and** make sure "Record Name" is selected
-    - Record name will auto populate the respondent's name and email
-
-Role may be requested as well. Recommend a default / static role of Student, then to manually change role to TA where required.
-
-Data will need to be reformatted into a csv with the requirements below.
-
-### Input CSV Format
-
 The CSV file must use the following column format:
 
 ```csv
@@ -190,9 +152,17 @@ Name,Email,Role,Username
 
 The following roles are supported:
 
-- **Student** – A student repository is created using the specified template repository.
-- **TA** – Can optionally receive a repository and read access to student repositories.
-- **Faculty** – Identifies the course instructor. No repository is created.
+- **Student** – Receives an invite to a repository created from the specified template.
+- **TA** – Script user has options to:
+    - create TA's a repository from the specified template
+    - grant read access to student repositories.
+- **Faculty** – No repository is created. It is assumed that the user is the org owner where the repos are created. Access is inherent to the org owner role.
+
+## Class Roster Creation
+
+Coming Soon:
+- recommended format on Pilot Quiz
+- script that adjusts Pilot quiz output to required Class Roster Format
 
 ## Repository Naming
 
