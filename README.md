@@ -4,7 +4,7 @@
 
 - Clone this repo
 - Install and authenticate the GitHub `gh` tool ([Install Here](https://cli.github.com/))
-- run installation script OR source the main file in your `~/.bashrc`
+- Source the main file in your `~/.bashrc`
 - get your data from the students...
     -  We recommend a pilot quiz but anything will do that get the student's github usernames and their campus email addresses
 - run the tool to create an assignment for your class
