@@ -61,6 +61,6 @@ Read through the [README](README.md) before making any contributions for script 
 
 1. [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) this repository
 2. Select an existing [issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-an-issue) or create a new issue describing the change you wish to make.
-2. [Create a branch](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-and-deleting-branches-within-your-repository) off the development branch for the edits you wish to make
-3. Make a [pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) in this repository from your branch to the development branch of this repository.
+3. [Create a branch](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-and-deleting-branches-within-your-repository) off the development branch for the edits you wish to make
+4. Make a [pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) in this repository from your branch to the development branch of this repository.
 
