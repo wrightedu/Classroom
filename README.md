@@ -56,6 +56,11 @@ The tool uses the GitHub CLI to interact with GitHub organizations, create repos
   - template repositories must be public and the Template Repository setting enabled
 - Class Roster CSV File
 
+### Optional
+
+- Python 3
+  - Only required when using the optional Pilot quiz parser to generate the Class Roster CSV
+
 ## Installation
 
 1. **Clone the Repository**
