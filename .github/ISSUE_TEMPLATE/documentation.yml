@@ -1,0 +1,53 @@
+name: Documentation
+description: Report missing, incorrect, or unclear documentation
+title: "[DOCS] "
+labels:
+  - documentation
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the WSU Classroom documentation!
+
+  - type: dropdown
+    id: documentation-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation does this issue relate to?
+      options:
+        - README
+        - Installation
+        - Usage
+        - Class Roster
+        - Pilot CSV Parser
+        - Contributing Guide
+        - Architecture Guide
+        - Code Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Documentation Issue
+      description: A clear and concise description of what is missing, incorrect, outdated, or unclear.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-change
+    attributes:
+      label: Suggested Change
+      description: Describe how you think the documentation could be improved.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, examples, links, or screenshots that may help.
+    validations:
+      required: false
