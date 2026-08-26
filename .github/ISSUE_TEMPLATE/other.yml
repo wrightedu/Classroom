@@ -1,0 +1,29 @@
+name: Other
+description: Open an issue that does not fit another category
+title: "[OTHER] "
+labels:
+  - other
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for issues that do not fit into one of the other available categories.
+
+        Before continuing, please make sure your issue is not better suited as a bug report, feature request, documentation issue, or question.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the issue, request, or topic.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other relevant information, links, screenshots, or context.
+    validations:
+      required: false
