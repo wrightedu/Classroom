@@ -4,15 +4,14 @@
 
 - Clone this repo: `git@github.com:wrightedu/Classroom.git`
 - Install and authenticate the GitHub `gh` tool ([Install Here](https://cli.github.com/))
-- Run the `install.sh` script OR `source` the `wsu_classroom.sh` file 
-    - Or add `source /path/to/wsu-classroom/wsu_classroom.sh` to your `~/.bashrc` and reload
+- Run the `install.sh` script OR `source` the `wsu_classroom.sh` file
+  - Or add `source /path/to/wsu-classroom/wsu_classroom.sh` to your `~/.bashrc` and reload
 - Get Name, Email, GitHub Username, and Role for your course students
-    - Follow requirements in [Class Roster Format](#classroom-roster-format)
-    - Would recommend Pilot quiz so that instructors can require student participation
-        - Standard quiz format coming soon
-        - Script to convert to CSV and add Role per requirements coming soon
+  - Follow the requirements in [Class Roster Format](#class-roster-format)
+  - Optionally, use the included Python parser to generate a roster from a Pilot quiz export
+    - See [Class Roster Creation](#class-roster-creation)
 - Run `WSU_classroom -O <organization> -A <assignment> -T <template> -C <path_to_csv_file>`
-    - See [Usage](#usage) for notes
+  - See [Usage](#usage) for notes
 
 ## Contents
 
@@ -21,10 +20,10 @@
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Class Roster Format](#class-roster-format)
+- [Class Roster Creation](#class-roster-creation)
 - [Usage](#usage)
 - [Repository Naming](#repository-naming)
 - [How It Works](#how-it-works)
-- [Generated Output](#generated-output)
 - [Troubleshooting](#troubleshooting)
 
 ## Overview
@@ -47,15 +46,20 @@ The tool uses the GitHub CLI to interact with GitHub organizations, create repos
 ## Prerequisites
 
 - Bash
-    - Bash through WSL2 is sufficient
+  - Bash through WSL2 is sufficient
 - Git
 - GitHub CLI installed & authenticated
 - GitHub Organization
-    - User should be Owner in GitHub Org
+  - User should be Owner in GitHub Org
 - Template repository
-    - template repository may be blank, but must exist.
-    - template repositories must be public and the Template Repository setting enabled
+  - template repository may be blank, but must exist.
+  - template repositories must be public and the Template Repository setting enabled
 - Class Roster CSV File
+
+### Optional
+
+- Python 3
+  - Only required when using the optional Pilot quiz parser to generate the Class Roster CSV
 
 ## Installation
 
@@ -141,12 +145,12 @@ The CSV file must use the following column format:
 Name,Email,Role,Username
 ```
 
-| Column | Description | Data Source |
-| --- | --- | --- |
-| `Name` | The first and last name of the roster member. | Pilot |
-| `Email` | The email address used to generate the repository identifier. | Pilot |
-| `Role` | The individual's role in the course. | Pilot |
-| `Username` | The individual's GitHub username. | Quiz |
+| Column | Description |
+| --- | --- |
+| `Name` | The first and last name of the roster member. |
+| `Email` | The email address used to generate the repository identifier. |
+| `Role` | The individual's role in the course. |
+| `Username` | The individual's GitHub username. |
 
 ### Supported Roles
 
@@ -154,15 +158,71 @@ The following roles are supported:
 
 - **Student** – Receives an invite to a repository created from the specified template.
 - **TA** – Script user has options to:
-    - create TA's a repository from the specified template
-    - grant read access to student repositories.
+  - create TA's a repository from the specified template
+  - grant read access to student repositories.
 - **Faculty** – No repository is created. It is assumed that the user is the org owner where the repos are created. Access is inherent to the org owner role.
 
 ## Class Roster Creation
 
-Coming Soon:
-- recommended format on Pilot Quiz
-- script that adjusts Pilot quiz output to required Class Roster Format
+WSU Classroom requires a CSV roster using the format described in [Class Roster Format](#class-roster-format).
+
+Users may create this CSV manually or optionally use the included Python parser to generate a roster from a Pilot quiz export.
+
+### Using the Python Parser (Optional)
+
+The included `parser.py` script extracts student information from a Pilot quiz CSV export and converts it into the format required by WSU Classroom.
+
+> [!NOTE]
+> Python 3 is only required when using the Pilot quiz parser. It is not required to run WSU Classroom itself.
+
+The Pilot quiz should ask students for:
+
+- Wright State email address
+- GitHub username
+
+The parser expects the Pilot CSV export to contain the following columns:
+
+| Pilot Column | Purpose |
+| --- | --- |
+| `FirstName` | Student's first name |
+| `LastName` | Student's last name |
+| `Org Defined ID` | Identifies and groups responses from the same student |
+| `Q Text` | Contains the Pilot quiz question |
+| `Answer Match` | Contains the student's response |
+
+To convert an exported Pilot quiz CSV, run:
+
+```bash
+python3 parser.py <pilot_csv_file>
+```
+
+For example:
+
+```bash
+python3 parser.py pilot_quiz_results.csv
+```
+
+The parser creates a file named:
+
+```text
+roster.csv
+```
+
+The generated roster uses the required WSU Classroom format:
+
+```csv
+Name,Email,Role,Username
+Jane Doe,doe.1@wright.edu,Student,janedoe
+John Smith,smith.2@wright.edu,Student,johnsmith
+```
+
+All entries generated by the parser are assigned the `Student` role. TA and Faculty entries must be added to the generated roster manually if needed.
+
+The generated roster can then be passed to WSU Classroom:
+
+```bash
+WSU_classroom -O <organization> -A <assignment> -T <template> -C roster.csv
+```
 
 ## Repository Naming
 
@@ -280,7 +340,7 @@ At the end of execution, WSU Classroom displays a configuration summary containi
 - Number of invalid GitHub usernames
 - Number of successfully created repositories
 - TA repository and TA repository access selections
-- If invalid Github usernames were found, presents name and email of invalid name found 
+- If invalid Github usernames were found, presents name and email of invalid name found
 
 ## Troubleshooting
 
@@ -360,5 +420,5 @@ If a student repository cannot be created, verify that:
 
 Review the terminal output and configuration summary for additional information about errors encountered while processing the roster.
 
-
 ### [Back to Top!](#contents)
+

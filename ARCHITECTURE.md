@@ -14,6 +14,16 @@ Contains functions used to validate GitHub and user information before repositor
 
 Contains helper functions used by the main script and roster processing. This includes creating student and TA repositories, granting TAs access to student repositories, generating email identifiers, exporting generated repository links to a CSV file, checking whether a roster contains TAs, and displaying the configuration summary.
 
+### `parser.py`
+
+Contains the Python data parser used to convert exported Pilot quiz data into the roster format required by WSU Classroom. The parser reads student information from the Pilot quiz CSV export, extracts each student's name, email address, and GitHub username, and generates a CSV file that can be used as the class roster input for WSU Classroom.
+
+## data
+
+### `Pilot-GHUsernames-Quiz.zip`
+
+Zip file to upload quiz to Pilot to obtain student names, emails, and GitHub usernames to assist in using the parser and main script.
+
 ## demo-files
 
 ### `demo_no_ta_roster.csv`
