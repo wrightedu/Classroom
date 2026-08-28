@@ -1,0 +1,27 @@
+name: Question
+description: Ask a question about WSU Classroom
+title: "[QUESTION] "
+labels:
+  - question
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about WSU Classroom? Ask it here!
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Provide any additional information that may help us answer your question.
+    validations:
+      required: false

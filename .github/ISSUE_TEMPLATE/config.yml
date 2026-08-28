@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: WSU Classroom Documentation
+    url: https://github.com/wrightedu/Classroom
+    about: Review the WSU Classroom documentation before opening an issue.

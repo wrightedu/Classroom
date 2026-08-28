@@ -1,0 +1,44 @@
+name: Feature Request
+description: Suggest a new feature or improvement for WSU Classroom
+title: "[FEATURE] "
+labels:
+  - enhancement
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature for WSU Classroom!
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is Your Feature Request Related to a Problem?
+      description: A clear and concise description of the problem or limitation, if applicable.
+      placeholder: I'm frustrated when...
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the Solution You'd Like
+      description: A clear and concise description of what you would like to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Describe Alternatives You've Considered
+      description: Describe any alternative solutions or features you've considered.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, examples, or screenshots about the feature request here.
+    validations:
+      required: false
