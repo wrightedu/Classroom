@@ -339,3 +339,40 @@ configurationSummary() {
     echo
     echo "========================================"
 }
+
+# Validates that a due date matches the expected MM/DD/YYYY format
+# Inputs:
+#       DUE_DATE - Due date to validate
+# Outputs:
+#       Returns 0 if the due date is valid, otherwise returns 1
+# State Changes:
+#       None
+validateDueDate() {
+
+    local DUE_DATE="$1"
+
+    if [[ ! "$DUE_DATE" =~ ^[0-9][0-9]/[0-9][0-9]/[0-9][0-9][0-9][0-9]$ ]]; then
+        return 1
+    fi
+
+    return 0
+}
+
+# Validates that a due time matches expected HH:MM AM/PM
+# Inputs:
+#       DUE_TIME - Due time to validate
+# Outputs:
+#       Returns 0 if due time is valid, returns 1 if not
+# State Changes:
+#       None
+validateDueTime() {
+
+    local DUE_TIME="$1"
+
+    if [[ ! "$DUE_TIME" =~ ^(0[1-9]|1[0-2]):[0-5][0-9]\ (AM|PM)$ ]]; then
+        return 1
+    fi
+
+    return 0
+}
+

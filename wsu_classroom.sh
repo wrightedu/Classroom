@@ -92,14 +92,15 @@ WSU_classroom() (
     local CREATE_TA_REPOS="N"
     local GRANT_TA_ACCESS="N"
     local CLONE
+    local ADD_DUE_DATE="N"
+    local DUE_DATE
+    local DUE_TIME
 
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     source "$SCRIPT_DIR/classroom_git_checks.sh"
     source "$SCRIPT_DIR/classroom_helper.sh"
 
-    # check if the user is authenticated with GitHub
-    isGitAuth
 
     # process the command line arguments
     # if no arguments are provided, display usage information and exit
@@ -148,6 +149,10 @@ WSU_classroom() (
         esac
     done
 
+     # check if the user is authenticated with GitHub
+    isGitAuth
+
+
     # make sure both an organization and assignment were provided
     if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
         echo "Error: -O -A -T -C are required."
@@ -171,6 +176,39 @@ WSU_classroom() (
     else
         echo "CSV file '$CSV_FILE' found."
     fi  
+
+    # setting due dates and times to repo upon creation
+    echo
+
+    read -p "Would you like to assign a due date? (Y/N): " ADD_DUE_DATE
+
+    if [[ "$ADD_DUE_DATE" =~ ^[Yy]$ ]]; then
+
+    while true
+    do
+        read -p "Enter due date (MM/DD/YYYY): " DUE_DATE
+
+        if validateDueDate "$DUE_DATE"; then
+            break
+        fi
+
+        echo "Invalid due date. Please use MM/DD/YYYY."
+    done
+
+    while true
+    do
+        read -p "Enter due time (HH:MM AM/PM): " DUE_TIME
+
+        if validateDueTime "$DUE_TIME"; then
+            break
+        fi
+
+        echo "Invalid due time. Please use HH:MM AM/PM."
+    done
+
+    echo
+    echo "Assignment due date: $DUE_DATE at $DUE_TIME"
+    fi
 
     # check if the CSV file contains TAs and prompt the user to create TA repositories and grant access to student repositories
     if hasTAs "$CSV_FILE"; then
