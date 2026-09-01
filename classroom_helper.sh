@@ -466,5 +466,41 @@ validateDueTime() {
     fi
 
     return 1
+}
 
+# Sets the due date and time for a repository using GitHub CLI
+# Inputs:
+#       ORGANIZATION - GitHub organization
+#       REPO_NAME - Name of the repository
+#       DUE_DATE - Due date to set (MM/DD/YYYY)
+#       DUE_TIME - Due time to set (HH:MM AM/PM or HH:MM 24-hour)
+# Outputs:
+#       Sets the due date and time for the specified repository
+# State Changes:
+#       The due date and time are set for the specified repository
+setRepoDueDate() {
+
+    local ORGANIZATION="$1"
+    local REPO_NAME="$2"
+    local DUE_DATE="$3"
+    local DUE_TIME="$4"
+
+    if ! gh variable set ASSIGNMENT_DUE_DATE \
+        --repo "$ORGANIZATION/$REPO_NAME" \
+        --body "$DUE_DATE" </dev/null
+    then
+        echo "Error: Failed to set due date for $REPO_NAME."
+        return 1
+    fi
+
+    if ! gh variable set ASSIGNMENT_DUE_TIME \
+        --repo "$ORGANIZATION/$REPO_NAME" \
+        --body "$DUE_TIME" </dev/null
+    then
+        echo "Error: Failed to set due time for $REPO_NAME."
+        return 1
+    fi
+
+    echo "Due date set for $REPO_NAME: $DUE_DATE at $DUE_TIME"
+    return 0
 }

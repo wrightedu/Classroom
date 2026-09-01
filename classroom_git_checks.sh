@@ -209,6 +209,9 @@ checkTemplateRepo() {
 #		TEMPLATE - Template repository to use for creating new repositories
 #		CREATE_TA_REPOS - Flag indicating whether to create TA repositories (Y/N)
 #		GRANT_TA_ACCESS - Flag indicating whether to grant TAs access to student repositories (Y/N)
+#       ADD_DUE_DATE - Flag indicating whether to add a due date to repositories (Y/N)
+#       DUE_DATE - Due date to set for repositories (if ADD_DUE_DATE is Y)
+#       DUE_TIME - Due time to set for repositories (if ADD_DUE_DATE is Y)
 # Outputs:
 #		Creates repositories for students and TAs, and grants access to TAs if specified
 # State Changes:
@@ -223,6 +226,9 @@ processRoster() {
     local TEMPLATE="$5"
     local CREATE_TA_REPOS="$6"
     local GRANT_TA_ACCESS="$7"
+    local ADD_DUE_DATE="$8"
+    local DUE_DATE="$9"
+    local DUE_TIME="${10}"
 
     local TAS=()
     local STUDENTS=()
@@ -278,6 +284,13 @@ processRoster() {
                 if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
                 then
                     REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
+
+                    if [[ "$ADD_DUE_DATE" =~ ^[Yy]$ ]]; then
+                        if ! setRepoDueDate "$ORGANIZATION" "$REPO_NAME" "$DUE_DATE" "$DUE_TIME"; then
+                            echo "Warning: Repository was created, but the due date was not set."
+                        fi
+                    fi
+
                     GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
                 fi
                 ;;
