@@ -209,9 +209,6 @@ checkTemplateRepo() {
 #		TEMPLATE - Template repository to use for creating new repositories
 #		CREATE_TA_REPOS - Flag indicating whether to create TA repositories (Y/N)
 #		GRANT_TA_ACCESS - Flag indicating whether to grant TAs access to student repositories (Y/N)
-#       ADD_DUE_DATE - Flag indicating whether to add a due date to repositories (Y/N)
-#       DUE_DATE - Due date to set for repositories (if ADD_DUE_DATE is Y)
-#       DUE_TIME - Due time to set for repositories (if ADD_DUE_DATE is Y)
 # Outputs:
 #		Creates repositories for students and TAs, and grants access to TAs if specified
 # State Changes:
@@ -226,9 +223,6 @@ processRoster() {
     local TEMPLATE="$5"
     local CREATE_TA_REPOS="$6"
     local GRANT_TA_ACCESS="$7"
-    local ADD_DUE_DATE="$8"
-    local DUE_DATE="$9"
-    local DUE_TIME="${10}"
 
     local TAS=()
     local STUDENTS=()
@@ -284,13 +278,6 @@ processRoster() {
                 if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
                 then
                     REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
-
-                    if [[ "$ADD_DUE_DATE" =~ ^[Yy]$ ]]; then
-                        if ! setRepoDueDate "$ORGANIZATION" "$REPO_NAME" "$DUE_DATE" "$DUE_TIME"; then
-                            echo "Warning: Repository was created, but the due date was not set."
-                        fi
-                    fi
-
                     GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
                 fi
                 ;;
@@ -332,4 +319,56 @@ processRoster() {
     fi
 
     exportRepoLinks "$ASSIGNMENT" "$CURRENT_TERM" "${GENERATED_REPO_LINKS[@]}"
+}
+
+# Checks if the specified GitHub user has pushed to the specified repository before the given deadline
+# Inputs:
+#		REPO - the repository name (in the format owner/repo)
+#		USERNAME - the GitHub username to check for pushes
+#		DEADLINE - the deadline timestamp in ISO 8601 format (e.g., 2024-06-30T23:59:59Z)
+# Outputs:
+#		Prints whether the user has pushed to the repository before the deadline or not
+# State Changes:
+#		None
+checkDueDate() {
+    local REPO="$1"
+    local USERNAME="$2"
+    local DEADLINE="$3"
+
+    local PUSH_DATA
+    local PUSH_TIME
+    local PUSH_ACTOR
+    local PUSH_SHA
+    local PUSH_REF
+
+    PUSH_DATA=$( gh api \
+        "repos/$REPO/activity?activity_type=push" \
+        --paginate \
+        --jq '.[] | [.timestamp, .actor.login, .after, .ref] | @tsv')
+
+    while IFS=$'\t' read -r PUSH_TIME PUSH_ACTOR PUSH_SHA PUSH_REF; do
+
+    if [[ "$PUSH_ACTOR" != "$USERNAME" ]]; then
+            continue
+        fi
+
+        # Only check pushes to main
+        if [[ "$PUSH_REF" != "refs/heads/main" ]]; then
+            continue
+        fi
+
+        echo "Checking push: $PUSH_TIME"
+
+        if [[ "$PUSH_TIME" < "$DEADLINE" || "$PUSH_TIME" == "$DEADLINE" ]]; then
+            echo "GOOD"
+            echo "Push time: $PUSH_TIME"
+            echo "Accepted SHA: $PUSH_SHA"
+            return 0
+        fi
+
+        echo "Late push. Checking previous push..."
+    done <<< "$PUSH_DATA"
+
+    echo "No push found on or before the deadline."
+    return 1
 }
