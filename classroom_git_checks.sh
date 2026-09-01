@@ -340,6 +340,7 @@ checkDueDate() {
     local PUSH_ACTOR
     local PUSH_SHA
     local PUSH_REF
+    local LOCAL_PUSH_TIME
 
     PUSH_DATA=$( gh api \
         "repos/$REPO/activity?activity_type=push" \
@@ -347,21 +348,21 @@ checkDueDate() {
         --jq '.[] | [.timestamp, .actor.login, .after, .ref] | @tsv')
 
     while IFS=$'\t' read -r PUSH_TIME PUSH_ACTOR PUSH_SHA PUSH_REF; do
-
-    if [[ "$PUSH_ACTOR" != "$USERNAME" ]]; then
+        if [[ "$PUSH_ACTOR" != "$USERNAME" ]]; then
             continue
         fi
 
-        # Only check pushes to main
         if [[ "$PUSH_REF" != "refs/heads/main" ]]; then
             continue
         fi
 
-        echo "Checking push: $PUSH_TIME"
+        LOCAL_PUSH_TIME=$(formatLocalTime "$PUSH_TIME")
+
+        echo "Checking push: $LOCAL_PUSH_TIME"
 
         if [[ "$PUSH_TIME" < "$DEADLINE" || "$PUSH_TIME" == "$DEADLINE" ]]; then
             echo "GOOD"
-            echo "Push time: $PUSH_TIME"
+            echo "Push time: $LOCAL_PUSH_TIME"
             echo "Accepted SHA: $PUSH_SHA"
             return 0
         fi

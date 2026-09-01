@@ -378,3 +378,21 @@ formatDueDate() {
         date -u -d "$DUE_DATE" "+%Y-%m-%dT%H:%M:%SZ"
     fi
 }
+
+formatLocalTime() {
+    local UTC_TIME="$1"
+    local TIMESTAMP
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+        # Parse the GitHub timestamp as UTC
+        TIMESTAMP=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" \
+            "$UTC_TIME" "+%s") || return 1
+
+        # Display the timestamp using the computer's local timezone
+        TZ="$(readlink /etc/localtime | sed 's|.*/zoneinfo/||')" \
+            date -r "$TIMESTAMP" "+%m/%d/%Y %I:%M:%S %p"
+    else
+        # Linux / WSL
+        date -d "$UTC_TIME" "+%m/%d/%Y %I:%M:%S %p"
+    fi
+}
