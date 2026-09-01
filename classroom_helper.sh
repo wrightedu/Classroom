@@ -339,3 +339,42 @@ configurationSummary() {
     echo
     echo "========================================"
 }
+
+# Formats a due date string into UTC format
+# Inputs:
+#       DUE_DATE - Due date string in the format "MM/DD/YYYY [HH:MM AM/PM]"
+# Outputs:
+#       Returns the due date in UTC format "YYYY-MM-DDTHH:MM:SSZ"
+# State Changes:
+#       None
+formatDueDate() {
+    local DUE_DATE="$1"
+    local DATE_FORMAT
+    local LOCAL_TIMESTAMP
+
+    # did the user provide a time? If not, default to 11:59 PM
+    case "$DUE_DATE" in
+        *[AaPp][Mm])
+            # add seconds to the time if not provided
+            DUE_DATE="${DUE_DATE% *}:00 ${DUE_DATE##* }"
+            ;;
+        *)
+            # no time provided, default to 11:59 PM
+            DUE_DATE="$DUE_DATE 11:59:59 PM"
+            ;;
+    esac
+
+    DATE_FORMAT="%m/%d/%Y %I:%M:%S %p"
+
+    # if the user is on macOS, we need to parse differently
+    if [[ "$(uname)" == "Darwin" ]]; then
+        # convert the due date to a local timestamp
+        LOCAL_TIMESTAMP=$(date -j -f "$DATE_FORMAT" "$DUE_DATE" "+%s") || return 1
+
+        # convert the timestamp to UTC
+        date -u -r "$LOCAL_TIMESTAMP" "+%Y-%m-%dT%H:%M:%SZ"
+    else
+        # linux / WSL
+        date -u -d "$DUE_DATE" "+%Y-%m-%dT%H:%M:%SZ"
+    fi
+}
