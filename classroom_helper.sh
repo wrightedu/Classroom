@@ -379,6 +379,13 @@ formatDueDate() {
     fi
 }
 
+# Formats a UTC timestamp into the local timezone
+# Inputs:
+#       UTC_TIME - UTC timestamp in the format "YYYY-MM-DDTHH:MM:SSZ"
+# Outputs:
+#       Returns the timestamp in the local timezone in the format "MM/DD/YYYY HH:MM:SS AM/PM"
+# State Changes:
+#       None
 formatLocalTime() {
     local UTC_TIME="$1"
     local TIMESTAMP
