@@ -331,9 +331,12 @@ processRoster() {
 # State Changes:
 #		None
 checkRepoDueDate() {
+
+    # Declare local variables
     local REPO="$1"
     local USERNAME="$2"
     local DEADLINE="$3"
+    local ISSUE_TITLE="$4"
 
     local PUSH_DATA
     local PUSH_TIME
@@ -348,25 +351,33 @@ checkRepoDueDate() {
     local YELLOW='\033[0;33m'
     local NC='\033[0m'
 
+    # Fetch the push activity data for the specified repository using the GitHub CLI
     PUSH_DATA=$(gh api \
         "repos/$REPO/activity?activity_type=push" \
         --paginate \
         --jq '.[] | [.timestamp, .actor.login, .after, .ref] | @tsv')
 
+    # Check if the push data was successfully retrieved
     while IFS=$'\t' read -r PUSH_TIME PUSH_ACTOR PUSH_SHA PUSH_REF; do
+        
+        # Check if the push was made by the specified user and to the main branch
         if [[ "$PUSH_ACTOR" != "$USERNAME" ]]; then
             continue
         fi
 
+        # Check if the push was made to the main branch
         if [[ "$PUSH_REF" != "refs/heads/main" ]]; then
             continue
         fi
 
+        # Format the push time to local time for display
         LOCAL_PUSH_TIME=$(formatLocalTime "$PUSH_TIME")
         echo "Checking push: $LOCAL_PUSH_TIME"
 
+        # Compare the push time with the deadline to determine if it was on time or late
         if [[ "$PUSH_TIME" < "$DEADLINE" || "$PUSH_TIME" == "$DEADLINE" ]]; then
 
+            # Print the result based on whether a late push was found or not
             if [[ "$FOUND_LATE" == true ]]; then
                 printf "${YELLOW}LATE - Using previous on-time push${NC}\n"
             else
@@ -377,9 +388,27 @@ checkRepoDueDate() {
             echo "Accepted SHA: $PUSH_SHA"
             echo "Rolling back to the accepted push..."
 
+            # Roll the repository back to the accepted push SHA
             if ! git reset --hard "$PUSH_SHA"; then
                 echo "Error: Failed to roll repository back to accepted push."
                 return 1
+            fi
+
+            # If a late push was found and an issue title is provided, create a GitHub issue to notify about the late push
+            if [[ "$FOUND_LATE" == true && -n "$ISSUE_TITLE" ]]; then
+                echo "Creating GitHub issue..."
+
+                if ! gh issue create \
+                    --repo "$REPO" \
+                    --title "$ISSUE_TITLE" \
+                    --body "A push was made after the assignment deadline.
+
+The commit being graded is: $PUSH_SHA
+
+Accepted push time: $LOCAL_PUSH_TIME"; then
+                    echo "Error: Failed to create GitHub issue."
+                    return 1
+                fi
             fi
 
             return 0
@@ -390,6 +419,7 @@ checkRepoDueDate() {
 
     done <<< "$PUSH_DATA"
 
+    # If no push was found on or before the deadline, print a message indicating that the user is late
     if [[ "$FOUND_LATE" == true ]]; then
         printf "${RED}LATE - No push found on or before the deadline.${NC}\n"
     else
@@ -408,21 +438,26 @@ checkRepoDueDate() {
 # State Changes:
 #		None
 checkClonedRepos() {
-        local REPO_DIR="$1"
+    local REPO_DIR="$1"
     local DEADLINE="$2"
+    local ISSUE_TITLE="$3"
     local REPO
 
+    # Check if the specified directory exists
     if [[ ! -d "$REPO_DIR" ]]; then
         echo "Error: Directory '$REPO_DIR' does not exist." >&2
         return 1
     fi
 
+    # Iterate through each subdirectory in the specified directory
     for REPO in "$REPO_DIR"/*; do
 
+        # Check if the subdirectory is a valid Git repository
         if [[ ! -d "$REPO" ]]; then
             continue
         fi
 
+        # Check if the subdirectory is a Git repository by looking for the .git directory
         if [[ ! -d "$REPO/.git" ]]; then
             echo "Warning: '$REPO' is not a Git repository."
             continue
@@ -431,6 +466,7 @@ checkClonedRepos() {
         echo
         echo "Checking repository: $(basename "$REPO")"
 
+        # Use a subshell to avoid changing the current working directory of the main script
         (
             local GITHUB_REPO
             local USERNAME
@@ -481,7 +517,7 @@ checkClonedRepos() {
 
             echo "Student: $USERNAME"
 
-            checkRepoDueDate "$GITHUB_REPO" "$USERNAME" "$DEADLINE"
+            checkRepoDueDate "$GITHUB_REPO" "$USERNAME" "$DEADLINE" "$ISSUE_TITLE"
         )
     done
 }

@@ -81,16 +81,20 @@ checkDueDate() {
     local DUE_DATE
     local REPO_DIR
     local DEADLINE
+    local ISSUE_TITLE
 
     OPTIND=1
 
-    while getopts ":D:" opt; do
+    while getopts "D:I:" opt; do
         case $opt in
             D)
                 DUE_DATE="$OPTARG"
                 ;;
+            I)
+                ISSUE_TITLE="$OPTARG"
+                ;;
             *)
-                echo "Usage: checkDueDate -D \"MM/DD/YYYY HH:MM AM/PM\" <repo-directory>"
+                echo echo "Usage: checkDueDate -D \"MM/DD/YYYY [HH:MM AM/PM]\" <repository-directory> [-I \"issue title\"]"
                 return 1
                 ;;
         esac
@@ -110,7 +114,7 @@ checkDueDate() {
         return 1
     }
 
-    checkClonedRepos "$REPO_DIR" "$DEADLINE"
+    checkClonedRepos "$REPO_DIR" "$DEADLINE" "$ISSUE_TITLE"
 }
 
 # Main function for the WSU Classroom script
