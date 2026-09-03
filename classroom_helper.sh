@@ -403,3 +403,42 @@ formatLocalTime() {
         date -d "$UTC_TIME" "+%m/%d/%Y %I:%M:%S %p"
     fi
 }
+
+checkClonedRepos() {
+    local REPO_DIR="$1"
+    local REPO
+
+    if [[ ! -d "$REPO_DIR" ]]; then
+        echo "Error: Directory '$REPO_DIR' does not exist." >&2
+        return 1
+    fi
+
+    for REPO in "$REPO_DIR"/*; do
+
+        if [[ ! -d "$REPO" ]]; then
+            continue
+        fi
+
+        if [[ ! -d "$REPO/.git" ]]; then
+            echo "Warning: '$REPO' is not a Git repository."
+            continue
+        fi
+
+        echo
+        echo "Checking repository: $(basename "$REPO")"
+
+        (
+            cd "$REPO" || exit 1
+            echo "Pulling latest changes..."
+
+            if ! git pull; then
+                echo "Error: Failed to pull latest changes for $(basename "$REPO")." >&2
+                exit 1
+            fi
+
+            REMOTE_URL=$(git remote get-url origin 2>/dev/null)
+
+            echo "Remote URL: $REMOTE_URL"
+        )
+    done
+}

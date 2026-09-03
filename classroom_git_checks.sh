@@ -330,7 +330,7 @@ processRoster() {
 #		Prints whether the user has pushed to the repository before the deadline or not
 # State Changes:
 #		None
-checkDueDate() {
+checkRepoDueDate() {
     local REPO="$1"
     local USERNAME="$2"
     local DEADLINE="$3"
