@@ -73,6 +73,7 @@ cloneRepositories() {
 # Inputs:
 #       -D DUE_DATE - Due date in the format "MM/DD/YYYY HH:MM AM/PM"
 #       <repo-directory> - Directory containing the cloned repositories
+#       -I ISSUE_TITLE (optional) - Title of the GitHub issue to create if the user is late
 # Outputs:
 #       Prints whether the user has pushed to the repository before the deadline or not
 # State Changes:
