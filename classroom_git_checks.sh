@@ -331,8 +331,6 @@ processRoster() {
 # State Changes:
 #		None
 checkRepoDueDate() {
-
-    # Declare local variables
     local REPO="$1"
     local USERNAME="$2"
     local DEADLINE="$3"
@@ -351,33 +349,28 @@ checkRepoDueDate() {
     local YELLOW='\033[0;33m'
     local NC='\033[0m'
 
-    # Fetch the push activity data for the specified repository using the GitHub CLI
     PUSH_DATA=$(gh api \
         "repos/$REPO/activity?activity_type=push" \
         --paginate \
         --jq '.[] | [.timestamp, .actor.login, .after, .ref] | @tsv')
 
-    # Check if the push data was successfully retrieved
     while IFS=$'\t' read -r PUSH_TIME PUSH_ACTOR PUSH_SHA PUSH_REF; do
-        
-        # Check if the push was made by the specified user and to the main branch
+
         if [[ "$PUSH_ACTOR" != "$USERNAME" ]]; then
             continue
         fi
 
-        # Check if the push was made to the main branch
         if [[ "$PUSH_REF" != "refs/heads/main" ]]; then
             continue
         fi
 
-        # Format the push time to local time for display
         LOCAL_PUSH_TIME=$(formatLocalTime "$PUSH_TIME")
         echo "Checking push: $LOCAL_PUSH_TIME"
 
-        # Compare the push time with the deadline to determine if it was on time or late
+        # Push was on time
         if [[ "$PUSH_TIME" < "$DEADLINE" || "$PUSH_TIME" == "$DEADLINE" ]]; then
 
-            # Print the result based on whether a late push was found or not
+            # A newer late push was found before this valid push
             if [[ "$FOUND_LATE" == true ]]; then
                 printf "${YELLOW}LATE - Using previous on-time push${NC}\n"
             else
@@ -386,15 +379,16 @@ checkRepoDueDate() {
 
             echo "Push time: $LOCAL_PUSH_TIME"
             echo "Accepted SHA: $PUSH_SHA"
+
+            # Roll the local grading copy back to the accepted push
             echo "Rolling back to the accepted push..."
 
-            # Roll the repository back to the accepted push SHA
             if ! git reset --hard "$PUSH_SHA"; then
                 echo "Error: Failed to roll repository back to accepted push."
                 return 1
             fi
 
-            # If a late push was found and an issue title is provided, create a GitHub issue to notify about the late push
+            # Create an issue only if a late push required a rollback
             if [[ "$FOUND_LATE" == true && -n "$ISSUE_TITLE" ]]; then
                 echo "Creating GitHub issue..."
 
@@ -414,16 +408,32 @@ Accepted push time: $LOCAL_PUSH_TIME"; then
             return 0
         fi
 
+        # Push occurred after the deadline
         FOUND_LATE=true
         printf "${RED}LATE${NC} - Checking previous push...\n"
 
     done <<< "$PUSH_DATA"
 
-    # If no push was found on or before the deadline, print a message indicating that the user is late
+    # No valid push was found
     if [[ "$FOUND_LATE" == true ]]; then
         printf "${RED}LATE - No push found on or before the deadline.${NC}\n"
     else
-        echo "No push found on or before the deadline."
+        printf "${RED}NO SUBMISSION - No push found on or before the deadline.${NC}\n"
+    fi
+
+    # Create a no-submission issue if -I was provided
+    if [[ -n "$ISSUE_TITLE" ]]; then
+        echo "Creating GitHub issue..."
+
+        if ! gh issue create \
+            --repo "$REPO" \
+            --title "$ISSUE_TITLE" \
+            --body "No valid submission was found on or before the assignment deadline.
+
+There is no commit eligible to be graded."; then
+            echo "Error: Failed to create GitHub issue."
+            return 1
+        fi
     fi
 
     return 1
