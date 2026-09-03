@@ -360,7 +360,7 @@ formatDueDate() {
             ;;
         *)
             # no time provided, default to 11:59 PM
-            DUE_DATE="$DUE_DATE 11:59:59 PM"
+            DUE_DATE="$DUE_DATE 11:59:00 PM"
             ;;
     esac
 
@@ -402,50 +402,4 @@ formatLocalTime() {
         # Linux / WSL
         date -d "$UTC_TIME" "+%m/%d/%Y %I:%M:%S %p"
     fi
-}
-
-# Checks if the cloned repositories are valid Git repositories and pulls the latest changes
-# Inputs:
-#       REPO_DIR - Directory containing the cloned repositories
-# Outputs:
-#       Prints the status of each repository and pulls the latest changes
-# State Changes:
-#       The latest changes are pulled for each valid Git repository
-checkClonedRepos() {
-    local REPO_DIR="$1"
-    local REPO
-
-    if [[ ! -d "$REPO_DIR" ]]; then
-        echo "Error: Directory '$REPO_DIR' does not exist." >&2
-        return 1
-    fi
-
-    for REPO in "$REPO_DIR"/*; do
-
-        if [[ ! -d "$REPO" ]]; then
-            continue
-        fi
-
-        if [[ ! -d "$REPO/.git" ]]; then
-            echo "Warning: '$REPO' is not a Git repository."
-            continue
-        fi
-
-        echo
-        echo "Checking repository: $(basename "$REPO")"
-
-        (
-            cd "$REPO" || exit 1
-            echo "Pulling latest changes..."
-
-            if ! git pull; then
-                echo "Error: Failed to pull latest changes for $(basename "$REPO")." >&2
-                exit 1
-            fi
-
-            REMOTE_URL=$(git remote get-url origin 2>/dev/null)
-
-            echo "Remote URL: $REMOTE_URL"
-        )
-    done
 }
