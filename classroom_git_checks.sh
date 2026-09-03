@@ -364,6 +364,14 @@ checkRepoDueDate() {
             echo "GOOD"
             echo "Push time: $LOCAL_PUSH_TIME"
             echo "Accepted SHA: $PUSH_SHA"
+
+            echo "Rolling back to the accepted push..."
+
+            if ! git reset --hard "$PUSH_SHA"; then
+                echo "Error: Failed to roll back to the accepted push."
+                return 1
+            fi
+            
             return 0
         fi
 
