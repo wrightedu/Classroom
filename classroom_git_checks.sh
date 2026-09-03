@@ -341,8 +341,14 @@ checkRepoDueDate() {
     local PUSH_SHA
     local PUSH_REF
     local LOCAL_PUSH_TIME
+    local FOUND_LATE=false
 
-    PUSH_DATA=$( gh api \
+    local RED='\033[0;31m'
+    local GREEN='\033[0;32m'
+    local YELLOW='\033[0;33m'
+    local NC='\033[0m'
+
+    PUSH_DATA=$(gh api \
         "repos/$REPO/activity?activity_type=push" \
         --paginate \
         --jq '.[] | [.timestamp, .actor.login, .after, .ref] | @tsv')
@@ -357,28 +363,39 @@ checkRepoDueDate() {
         fi
 
         LOCAL_PUSH_TIME=$(formatLocalTime "$PUSH_TIME")
-
         echo "Checking push: $LOCAL_PUSH_TIME"
 
         if [[ "$PUSH_TIME" < "$DEADLINE" || "$PUSH_TIME" == "$DEADLINE" ]]; then
-            echo "GOOD"
+
+            if [[ "$FOUND_LATE" == true ]]; then
+                printf "${YELLOW}LATE - Using previous on-time push${NC}\n"
+            else
+                printf "${GREEN}GOOD${NC}\n"
+            fi
+
             echo "Push time: $LOCAL_PUSH_TIME"
             echo "Accepted SHA: $PUSH_SHA"
-
             echo "Rolling back to the accepted push..."
 
             if ! git reset --hard "$PUSH_SHA"; then
-                echo "Error: Failed to roll back to the accepted push."
+                echo "Error: Failed to roll repository back to accepted push."
                 return 1
             fi
-            
+
             return 0
         fi
 
-        echo "Late push. Checking previous push..."
+        FOUND_LATE=true
+        printf "${RED}LATE${NC} - Checking previous push...\n"
+
     done <<< "$PUSH_DATA"
 
-    echo "No push found on or before the deadline."
+    if [[ "$FOUND_LATE" == true ]]; then
+        printf "${RED}LATE - No push found on or before the deadline.${NC}\n"
+    else
+        echo "No push found on or before the deadline."
+    fi
+
     return 1
 }
 
