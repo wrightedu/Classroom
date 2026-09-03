@@ -69,6 +69,14 @@ cloneRepositories() {
     echo "Finished cloning repositories."
 }
 
+# Function to check if the user has pushed to the repository before the deadline
+# Inputs:
+#       -D DUE_DATE - Due date in the format "MM/DD/YYYY HH:MM AM/PM"
+#       <repo-directory> - Directory containing the cloned repositories
+# Outputs:
+#       Prints whether the user has pushed to the repository before the deadline or not
+# State Changes:
+#       None
 checkDueDate() {
     local DUE_DATE
     local REPO_DIR

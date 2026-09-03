@@ -404,6 +404,13 @@ formatLocalTime() {
     fi
 }
 
+# Checks if the cloned repositories are valid Git repositories and pulls the latest changes
+# Inputs:
+#       REPO_DIR - Directory containing the cloned repositories
+# Outputs:
+#       Prints the status of each repository and pulls the latest changes
+# State Changes:
+#       The latest changes are pulled for each valid Git repository
 checkClonedRepos() {
     local REPO_DIR="$1"
     local REPO
