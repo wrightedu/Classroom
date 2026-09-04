@@ -320,3 +320,151 @@ processRoster() {
 
     exportRepoLinks "$ASSIGNMENT" "$CURRENT_TERM" "${GENERATED_REPO_LINKS[@]}"
 }
+
+# Checks if the specified GitHub user has pushed to the specified repository before the given deadline
+# Inputs:
+#		REPO - the repository name (in the format owner/repo)
+#		USERNAME - the GitHub username to check for pushes
+#		DEADLINE - the deadline timestamp in ISO 8601 format (e.g., 2024-06-30T23:59:59Z)
+# Outputs:
+#		Prints whether the user has pushed to the repository before the deadline or not
+# State Changes:
+#		None
+checkRepoDueDate() {
+    local REPO="$1"
+    local USERNAME="$2"
+    local DEADLINE="$3"
+
+    local PUSH_DATA
+    local PUSH_TIME
+    local PUSH_ACTOR
+    local PUSH_SHA
+    local PUSH_REF
+    local LOCAL_PUSH_TIME
+
+    PUSH_DATA=$( gh api \
+        "repos/$REPO/activity?activity_type=push" \
+        --paginate \
+        --jq '.[] | [.timestamp, .actor.login, .after, .ref] | @tsv')
+
+    while IFS=$'\t' read -r PUSH_TIME PUSH_ACTOR PUSH_SHA PUSH_REF; do
+        if [[ "$PUSH_ACTOR" != "$USERNAME" ]]; then
+            continue
+        fi
+
+        if [[ "$PUSH_REF" != "refs/heads/main" ]]; then
+            continue
+        fi
+
+        LOCAL_PUSH_TIME=$(formatLocalTime "$PUSH_TIME")
+
+        echo "Checking push: $LOCAL_PUSH_TIME"
+
+        if [[ "$PUSH_TIME" < "$DEADLINE" || "$PUSH_TIME" == "$DEADLINE" ]]; then
+            echo "GOOD"
+            echo "Push time: $LOCAL_PUSH_TIME"
+            echo "Accepted SHA: $PUSH_SHA"
+
+            echo "Rolling back to the accepted push..."
+
+            if ! git reset --hard "$PUSH_SHA"; then
+                echo "Error: Failed to roll back to the accepted push."
+                return 1
+            fi
+            
+            return 0
+        fi
+
+        echo "Late push. Checking previous push..."
+    done <<< "$PUSH_DATA"
+
+    echo "No push found on or before the deadline."
+    return 1
+}
+
+# Checks all cloned repositories in the specified directory for pushes before the given deadline
+# Inputs:
+#		REPO_DIR - Directory containing the cloned repositories
+#		DEADLINE - the deadline timestamp in ISO 8601 format (e.g., 2024-06-30T23:59:59Z)
+# Outputs:
+#		Prints the status of each repository regarding pushes before the deadline
+# State Changes:
+#		None
+checkClonedRepos() {
+        local REPO_DIR="$1"
+    local DEADLINE="$2"
+    local REPO
+
+    if [[ ! -d "$REPO_DIR" ]]; then
+        echo "Error: Directory '$REPO_DIR' does not exist." >&2
+        return 1
+    fi
+
+    for REPO in "$REPO_DIR"/*; do
+
+        if [[ ! -d "$REPO" ]]; then
+            continue
+        fi
+
+        if [[ ! -d "$REPO/.git" ]]; then
+            echo "Warning: '$REPO' is not a Git repository."
+            continue
+        fi
+
+        echo
+        echo "Checking repository: $(basename "$REPO")"
+
+        (
+            local GITHUB_REPO
+            local USERNAME
+
+            cd "$REPO" || exit 1
+
+            echo "Pulling latest changes..."
+
+            if ! git pull; then
+                echo "Error: Failed to pull latest changes for $(basename "$REPO")." >&2
+                exit 1
+            fi
+
+            # Determine the GitHub repository from the current clone
+            GITHUB_REPO=$(gh repo view \
+                --json nameWithOwner \
+                --jq '.nameWithOwner')
+
+            if [[ -z "$GITHUB_REPO" ]]; then
+                echo "Error: Unable to determine GitHub repository."
+                exit 1
+            fi
+
+            # Look for a student who has accepted their repository invitation.
+            # Students receive push access while organization owners have admin access.
+            USERNAME=$(gh api \
+                "repos/$GITHUB_REPO/collaborators" \
+                --jq '.[] |
+                    select(.permissions.push == true and .permissions.admin == false) |
+                    .login' \
+                | head -n 1)
+
+            # If the student has not accepted the invitation yet,
+            # look for the pending write invitation instead.
+            if [[ -z "$USERNAME" ]]; then
+                USERNAME=$(gh api \
+                    "repos/$GITHUB_REPO/invitations" \
+                    --jq '.[] |
+                        select(.permissions == "write") |
+                        .invitee.login' \
+                    | head -n 1)
+            fi
+
+            if [[ -z "$USERNAME" ]]; then
+                echo "Warning: Unable to determine student GitHub username."
+                exit 1
+            fi
+
+            echo "Student: $USERNAME"
+
+            checkRepoDueDate "$GITHUB_REPO" "$USERNAME" "$DEADLINE"
+        )
+    done
+}

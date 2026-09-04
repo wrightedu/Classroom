@@ -69,6 +69,50 @@ cloneRepositories() {
     echo "Finished cloning repositories."
 }
 
+# Function to check if the user has pushed to the repository before the deadline
+# Inputs:
+#       -D DUE_DATE - Due date in the format "MM/DD/YYYY HH:MM AM/PM"
+#       <repo-directory> - Directory containing the cloned repositories
+# Outputs:
+#       Prints whether the user has pushed to the repository before the deadline or not
+# State Changes:
+#       None
+checkDueDate() {
+    local DUE_DATE
+    local REPO_DIR
+    local DEADLINE
+
+    OPTIND=1
+
+    while getopts ":D:" opt; do
+        case $opt in
+            D)
+                DUE_DATE="$OPTARG"
+                ;;
+            *)
+                echo "Usage: checkDueDate -D \"MM/DD/YYYY HH:MM AM/PM\" <repo-directory>"
+                return 1
+                ;;
+        esac
+    done
+
+    shift $((OPTIND -1))
+
+    REPO_DIR="$1"
+
+    if [[ -z "$DUE_DATE" || -z "$REPO_DIR" ]]; then
+        echo "Usage: checkDueDate -D \"MM/DD/YYYY HH:MM AM/PM\" <repo-directory>"
+        return 1
+    fi
+
+    DEADLINE=$(formatDueDate "$DUE_DATE") || {
+        echo "Error: Invalid due date format. Please use \"MM/DD/YYYY HH:MM AM/PM\"."
+        return 1
+    }
+
+    checkClonedRepos "$REPO_DIR" "$DEADLINE"
+}
+
 # Main function for the WSU Classroom script
 # Inputs:
 #       -O ORGANIZATION - GitHub organization
