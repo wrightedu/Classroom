@@ -200,6 +200,26 @@ checkTemplateRepo() {
     echo "Using template repository: $TEMPLATE"
 }
 
+# Checks if a repository already exists in the specified GitHub organization
+# Inputs:
+#       ORGANIZATION - the GitHub organization
+#       REPO_NAME - the repository name to check
+# Outputs:
+#       Returns 0 if the repository exists, 1 if it does not
+repoExists() {
+
+    # Local variables
+    local ORGANIZATION="$1"
+    local REPO_NAME="$2"
+
+    # Check if the repository exists
+    if gh repo view "$ORGANIZATION/$REPO_NAME" >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Processes the CSV file containing names, GitHub usernames, and roles, and creates repositories accordingly
 # Inputs:
 #		CSV_FILE - CSV file containing names, GitHub usernames, and roles
@@ -275,10 +295,18 @@ processRoster() {
             Student)
                 STUDENTS+=("$EMAIL:$USERNAME")
 
-                if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
-                then
-                    REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
+                REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
+
+                if repoExists "$ORGANIZATION" "$REPO_NAME"; then
+                    echo "Repository already exists for $NAME: $REPO_NAME"
+                    echo "Skipping repository creation."
                     GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
+                else
+
+                    if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
+                    then
+                        GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
+                    fi
                 fi
                 ;;
 
@@ -286,7 +314,15 @@ processRoster() {
                 TAS+=("$EMAIL:$USERNAME")
 
                 if [[ "$CREATE_TA_REPOS" =~ ^[Yy]$ ]]; then
-                    createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
+
+                    REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
+
+                    if repoExists "$ORGANIZATION" "$REPO_NAME"; then
+                        echo "Repository already exists for $USERNAME: $REPO_NAME"
+                        echo "Skipping repository creation."
+                    else
+                        createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
+                    fi
                 fi
                 ;;
 
