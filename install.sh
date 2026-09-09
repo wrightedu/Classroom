@@ -24,7 +24,7 @@ echo "Git is installed."
 # Check if Python 3 is installed
 # Optional requirement, but needed for data parser.
 
-if ! command -v pyhton3 >/dev/null 2>&1; then
+if ! command -v python3 >/dev/null 2>&1; then
     echo "Warning: Python 3 is not installed."
     echo "Python 3 is required to use the Pilot quiz data parser."
     echo "WSU Classroom can still be used without the parser."
