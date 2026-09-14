@@ -142,8 +142,10 @@ WSU_classroom() (
     source "$SCRIPT_DIR/classroom_git_checks.sh"
     source "$SCRIPT_DIR/classroom_helper.sh"
 
-    # check if the user is authenticated with GitHub
-    isGitAuth
+    if [[ "$1" == "-h" && "$#" -eq 1 ]]; then
+        usage
+        return 0
+    fi
 
     # process the command line arguments
     # if no arguments are provided, display usage information and exit
@@ -156,21 +158,19 @@ WSU_classroom() (
     # reset the option index for getopts
     OPTIND=1
 
-    while getopts ":h?O:A:T:C:" opt; do
+    while getopts ":hO:A:T:C:" opt; do
         case $opt in
-            h|\?)
+            h)
                 usage
-	            return 0
+                return 0
                 ;;
             O)
-	            ORGANIZATION="$OPTARG"
+                ORGANIZATION="$OPTARG"
                 ;;
             A)
                 ASSIGNMENT="$OPTARG"
-
-	            CURRENT_TERM=$(getCurrentTerm)
+                CURRENT_TERM=$(getCurrentTerm)
                 REPO_NAME="$ASSIGNMENT-email-$CURRENT_TERM"
-
                 echo "Generated repository name: $REPO_NAME"
                 ;;
             T)
@@ -181,12 +181,12 @@ WSU_classroom() (
                 ;;
             :)
                 echo "Error: Option -$OPTARG requires an argument."
-                usage
+                echo "Run 'WSU_classroom -h' for usage information."
                 return 1
                 ;;
-            *)
+            \?)
                 echo "Error: Invalid option -$OPTARG"
-                usage
+                echo "Run 'WSU_classroom -h' for usage information."
                 return 1
                 ;;
         esac
@@ -198,6 +198,9 @@ WSU_classroom() (
         usage
         return 1
     fi
+
+    # check if the user is authenticated with GitHub
+    isGitAuth
 
     # verify ownership of the organization
     checkOrganizationOwnership "$ORGANIZATION"
