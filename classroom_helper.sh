@@ -44,6 +44,27 @@ usage() {
     return 0
 }
 
+# Displays the usage information for the repository generation command
+# Inputs:
+#       None
+# Outputs:
+#       Prints usage information for the repository generation command
+# State Changes:
+#       None
+repoGenerationUsage() {
+    echo
+    echo "Usage: WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>"
+    echo
+    echo "Required Options:"
+    echo "  -O organization   GitHub organization where repositories will be created"
+    echo "  -A assignment     Assignment name used when generating repository names"
+    echo "  -T template       GitHub template repository in owner/repository format"
+    echo "  -C csv_file       Class roster CSV containing Name, Email, Role, and Username"
+    echo
+    echo "Run 'WSU_classroom -h' for more information."
+    return 0
+}
+
 # Grants a TA read access to a student's repository
 # Inputs:
 #       TA - GitHub username of the TA

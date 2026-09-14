@@ -182,11 +182,13 @@ WSU_classroom() (
             :)
                 echo "Error: Option -$OPTARG requires an argument."
                 echo "Run 'WSU_classroom -h' for usage information."
+                repoGenerationUsage
                 return 1
                 ;;
             \?)
                 echo "Error: Invalid option -$OPTARG"
                 echo "Run 'WSU_classroom -h' for usage information."
+                repoGenerationUsage
                 return 1
                 ;;
         esac
@@ -195,7 +197,7 @@ WSU_classroom() (
     # make sure both an organization and assignment were provided
     if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
         echo "Error: -O -A -T -C are required."
-        usage
+        repoGenerationUsage
         return 1
     fi
 
