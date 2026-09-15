@@ -34,7 +34,8 @@ cloneRepositories() {
 
     # Create the directory if it does not exist
     if [[ ! -d "$CLONE_DIR" ]]; then
-        read -p "Directory does not exist. Create it? (Y/N): " CREATE
+        read -p "Directory does not exist. Create it? (Y/N) [Y]: " CREATE
+        CREATE="${CREATE:-Y}"
 
         if [[ "$CREATE" =~ ^[Yy]$ ]]; then
             mkdir -p "$CLONE_DIR"
@@ -224,9 +225,11 @@ WSU_classroom() (
     # check if the CSV file contains TAs and prompt the user to create TA repositories and grant access to student repositories
     if hasTAs "$CSV_FILE"; then
         echo
-        read -p "Would you like to create repositories for TAs? (Y/N): " CREATE_TA_REPOS
+        read -p "Would you like to create repositories for TAs? (Y/N) [N]: " CREATE_TA_REPOS
+        CREATE_TA_REPOS="${CREATE_TA_REPOS:-N}"
 
-        read -p "Would you like to grant TAs access to student repositories? (Y/N): " GRANT_TA_ACCESS
+        read -p "Would you like to grant TAs access to student repositories? (Y/N) [Y]: " GRANT_TA_ACCESS
+        GRANT_TA_ACCESS="${GRANT_TA_ACCESS:-Y}"
     fi
 
     # process the class roster and create repositories
@@ -234,7 +237,8 @@ WSU_classroom() (
 
     # allows the user to clone the student repositories to their local machine if they want
     echo
-    read -p "Would you like to clone the student repositories to your local machine? (Y/N): " CLONE
+    read -p "Would you like to clone the student repositories to your local machine? (Y/N) [N]: " CLONE
+    CLONE="${CLONE:-N}"
 
     if [[ "$CLONE" =~ ^[Yy]$ ]]; then
         cloneRepositories
