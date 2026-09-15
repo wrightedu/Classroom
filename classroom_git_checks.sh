@@ -151,18 +151,23 @@ editRepoName() {
         echo "4. Cancel and exit"
         echo
 
-        read -p "Enter your choice (1-4): " choice
+        read -p "Enter your choice (1-4) [1]:" choice
+
+        choice="${choice:-1}"
 
         case $choice in
             1)
                 break
                 ;;
             2)
-                read -p "Enter new assignment name: " ASSIGNMENT
+                read -p "Enter new assignment name [$ASSIGNMENT]: " NEW_ASSIGNMENT
+                ASSIGNMENT="${NEW_ASSIGNMENT:-$ASSIGNMENT}"
                 REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
                 ;;
+
             3)
-                read -p "Enter new term (e.g., f26, s27, su27): " CURRENT_TERM
+                read -p "Enter new term [$CURRENT_TERM]: " NEW_TERM
+                CURRENT_TERM="${NEW_TERM:-$CURRENT_TERM}"
                 REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
                 ;;
             4)

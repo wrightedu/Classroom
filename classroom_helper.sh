@@ -1,17 +1,67 @@
-# Displays the usage information for the script
+# Displays the usage information for the WSU Classroom tools
 # Inputs:
 #       None
 # Outputs:
-#       Prints the usage information to the console
+#       Prints usage information for WSU_classroom, cloneRepositories,
+#       and checkDueDate
 # State Changes:
 #       None
 usage() {
-    echo "Usage: WSU_classroom [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
+    echo
+    echo "                                  WSU Classroom"
+    echo "=========================================================================================="
+    echo "Usage:"
+    echo "  WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>"
+    echo "  WSU_classroom -h"
+    echo
+    echo "Required Options:"
+    echo "  -O organization   GitHub organization where repositories will be created"
+    echo "  -A assignment     Assignment name used when generating repository names"
+    echo "  -T template       GitHub template repository in owner/repository format"
+    echo "  -C csv_file       Class roster CSV containing Name, Email, Role, and Username"
+    echo
+    echo "=========================================================================================="
+    echo
+    echo "Other Options:"
     echo "  -h                Show this help message and exit"
-    echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
-    echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
-    echo "  -T template       Specify the template repository to use for creating new repositories"
-    echo "  -C csv_file       Specify the class roster CSV file"
+    echo
+    echo "=========================================================================================="
+    echo
+    echo "Additional Commands:"
+    echo
+    echo "  cloneRepositories"
+    echo "      Clone repositories listed in a generated repository-links CSV file."
+    echo "      The command prompts for the CSV file and destination directory."
+    echo
+    echo "  checkDueDate -D \"MM/DD/YYYY [HH:MM AM/PM]\" <repository-directory>"
+    echo "      Check cloned student repositories for an eligible push on or before"
+    echo "      the assignment deadline."
+    echo
+    echo "      -D due_date      Assignment deadline."
+    echo "                       If no time is provided, defaults to 11:59 PM."
+    echo
+    echo "=========================================================================================="
+    return 0
+}
+
+# Displays the usage information for the repository generation command
+# Inputs:
+#       None
+# Outputs:
+#       Prints usage information for the repository generation command
+# State Changes:
+#       None
+repoGenerationUsage() {
+    echo
+    echo "Usage: WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>"
+    echo
+    echo "Required Options:"
+    echo "  -O organization   GitHub organization where repositories will be created"
+    echo "  -A assignment     Assignment name used when generating repository names"
+    echo "  -T template       GitHub template repository in owner/repository format"
+    echo "  -C csv_file       Class roster CSV containing Name, Email, Role, and Username"
+    echo
+    echo "Run 'WSU_classroom -h' for more information."
     return 0
 }
 
