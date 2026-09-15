@@ -33,7 +33,7 @@ usage() {
     echo "      Clone repositories listed in a generated repository-links CSV file."
     echo "      The command prompts for the CSV file and destination directory."
     echo
-    echo "  checkDueDate -D \"MM/DD/YYYY [HH:MM AM/PM]\" <repository-directory> [-I \"issue title\"]"
+    echo "  checkDueDate -D \"MM/DD/YYYY [HH:MM AM/PM]\" <repository-directory>"
     echo "      Check cloned student repositories for an eligible push on or before"
     echo "      the assignment deadline."
     echo
