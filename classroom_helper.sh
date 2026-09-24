@@ -453,3 +453,24 @@ formatLocalTime() {
         date -d "$UTC_TIME" "+%m/%d/%Y %I:%M:%S %p"
     fi
 }
+
+# Loads environment variables from a .env file if it exists
+# Inputs:
+#       None
+# Outputs:
+#       Loads environment variables from a .env file if it exists
+# State Changes:
+#       Environment variables are set in the current shell session
+loadENV() {
+
+    local ENV_FILE=".env"
+
+    if [[ -f ".env" ]]; then
+        echo "Loading environment variables from .env file..."
+        set -a
+        source "$ENV_FILE"
+        set +a
+    else
+        echo "No .env file found. Skipping environment variable loading."
+    fi
+}
