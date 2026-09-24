@@ -143,6 +143,9 @@ WSU_classroom() (
     source "$SCRIPT_DIR/classroom_git_checks.sh"
     source "$SCRIPT_DIR/classroom_helper.sh"
 
+    loadENV
+
+    # display usage information if the user requests help
     if [[ "$1" == "-h" && "$#" -eq 1 ]]; then
         usage
         return 0
@@ -194,10 +197,22 @@ WSU_classroom() (
                 ;;
         esac
     done
+    
+    # if the organization is not provided, use the WSU_ORG environment variable if it is set
+    if [[ -z "$ORGANIZATION" && -n "$WSU_ORG" ]]; then
+        ORGANIZATION="$WSU_ORG"
+    fi
 
-    # make sure both an organization and assignment were provided
-    if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
-        echo "Error: -O -A -T -C are required."
+
+    if [[ -z "$ORGANIZATION" ]]; then
+        echo "Error: No GitHub organization provided."
+        echo "Use -O <organization> or define WSU_ORG in a local .env file."
+        repoGenerationUsage
+        return 1
+    fi
+
+    if [[ -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
+        echo "Error: -A -T -C are required."
         repoGenerationUsage
         return 1
     fi

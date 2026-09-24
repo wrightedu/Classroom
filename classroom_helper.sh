@@ -15,10 +15,13 @@ usage() {
     echo "  WSU_classroom -h"
     echo
     echo "Required Options:"
-    echo "  -O organization   GitHub organization where repositories will be created"
     echo "  -A assignment     Assignment name used when generating repository names"
     echo "  -T template       GitHub template repository in owner/repository format"
     echo "  -C csv_file       Class roster CSV containing Name, Email, Role, and Username"
+    echo
+    echo " Configuration Options:"
+    echo "  -O organization   GitHub organization where repositories will be created"
+    echo "                    Overrides WSU_ORG defined in the local .env file"
     echo
     echo "=========================================================================================="
     echo
@@ -466,7 +469,7 @@ loadENV() {
     local ENV_FILE=".env"
 
     if [[ -f ".env" ]]; then
-        echo "Loading environment variables from .env file..."
+        echo "Local .env configuration found."
         set -a
         source "$ENV_FILE"
         set +a
