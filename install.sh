@@ -31,6 +31,8 @@ if ! command -v python3 >/dev/null 2>&1; then
     echo
     echo "To install Python 3, visit:"
     echo "https://www.python.org/downloads/"
+else
+    echo "Python 3 is installed."
 fi
 
 # check if gh (GitHub CLI) is installed
@@ -125,6 +127,24 @@ else
     echo "$SOURCE_LINE" >> "$SHELL_CONFIG"
 
     echo "Added WSU Classroom to $SHELL_CONFIG."
+fi
+
+# configure default GitHub organization
+
+echo
+
+read -p "Enter your default GitHub organization (or press Enter to skip): " GITHUB_ORG
+
+if [[ -n "$GITHUB_ORG" ]]; then
+
+    if grep -q '^export WSU_ORG=' "$SHELL_CONFIG"; then
+        sed -i.bak "s|^export WSU_ORG=.*|export WSU_ORG=\"$GITHUB_ORG\"|" "$SHELL_CONFIG"
+        rm -f "$SHELL_CONFIG.bak"
+    else
+        echo "export WSU_ORG=\"$GITHUB_ORG\"" >> "$SHELL_CONFIG"
+    fi
+
+    echo "Set default GitHub organization to '$GITHUB_ORG' in $SHELL_CONFIG."
 fi
 
 # installation complete
