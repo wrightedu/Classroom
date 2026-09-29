@@ -217,9 +217,20 @@ repoExists() {
     local OUTPUT_FILE="$1"
     local REPO_NAME="$2"
 
-    # Check ig the output file exists
+    # Check if the output file exists
+    if [[ ! -f "$OUTPUT_FILE" ]]; then
+        echo "No output file found. Assuming no repositories have been created yet."
+        return 1
+    fi
 
     # Check if repo is in the output file
+    if grep -Fq "$REPO_NAME" "$OUTPUT_FILE"; then
+        echo "Repository '$REPO_NAME' already exists."
+        return 0
+    else
+        echo "Repository '$REPO_NAME' does not exist."
+        return 1
+    fi
 }
 
 # Processes the CSV file containing names, GitHub usernames, and roles, and creates repositories accordingly
@@ -262,6 +273,7 @@ processRoster() {
     local STUDENT_EMAIL
     local GENERATED_REPO_LINKS=()
     local REPO_NAME
+    local OUTPUT_FILE="${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv"
 
     # Read the CSV file line by line, skipping the header, and process each entry
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
@@ -299,7 +311,7 @@ processRoster() {
 
                 REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
 
-                if repoExists "$ORGANIZATION" "$REPO_NAME"; then
+                if repoExists "$OUTPUT_FILE" "$REPO_NAME"; then
                     echo "Repository already exists for $NAME: $REPO_NAME"
                     echo "Skipping repository creation."
                     GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
@@ -319,7 +331,7 @@ processRoster() {
 
                     REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
 
-                    if repoExists "$ORGANIZATION" "$REPO_NAME"; then
+                    if repoExists "$OUTPUT_FILE" "$REPO_NAME"; then
                         echo "Repository already exists for $USERNAME: $REPO_NAME"
                         echo "Skipping repository creation."
                     else
