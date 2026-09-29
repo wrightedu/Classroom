@@ -207,22 +207,19 @@ checkTemplateRepo() {
 
 # Checks if a repository already exists in the specified GitHub organization
 # Inputs:
-#       ORGANIZATION - the GitHub organization
+#       OUTPUT_FILE - CSV file containing previously created repository links
 #       REPO_NAME - the repository name to check
 # Outputs:
 #       Returns 0 if the repository exists, 1 if it does not
 repoExists() {
 
     # Local variables
-    local ORGANIZATION="$1"
+    local OUTPUT_FILE="$1"
     local REPO_NAME="$2"
 
-    # Check if the repository exists
-    if gh repo view "$ORGANIZATION/$REPO_NAME" >/dev/null 2>&1; then
-        return 0
-    else
-        return 1
-    fi
+    # Check ig the output file exists
+
+    # Check if repo is in the output file
 }
 
 # Processes the CSV file containing names, GitHub usernames, and roles, and creates repositories accordingly
