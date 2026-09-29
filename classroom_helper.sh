@@ -173,7 +173,10 @@ exportRepoLinks() {
         return 1
     fi
 
-    echo "Name,Repository Link" > "$OUTPUT_FILE"
+    # Only write the header when csv file does not exist
+    if [[ ! -f "$OUTPUT_FILE" ]]; then
+        echo "Name,Repository Link" > "$OUTPUT_FILE"
+    fi
 
     # Sort the generated repository links by name and export them to the CSV file
     printf "%s\n" "${GENERATED_REPO_LINKS[@]}" \
@@ -327,6 +330,11 @@ configurationSummary() {
         EMAIL=${EMAIL//$'\r'/}
         ROLE=${ROLE//$'\r'/}
         USERNAME=${USERNAME//$'\r'/}
+
+        # Skip empty lines
+        if [[ -z "$NAME" && -z "$EMAIL" && -z "$ROLE" && -z "$USERNAME" ]]; then
+            continue
+        fi
 
         # Count roles
         case "$ROLE" in
