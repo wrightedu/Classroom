@@ -327,10 +327,10 @@ processRoster() {
                 else
                     if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
                     then
-						echo"  Status: Created"
+						echo "  Status: Created"
                         GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
 					else
-						echo"  Status: Failed to create"
+						echo "  Status: Failed to create"
                     fi
                 fi
 
@@ -351,10 +351,10 @@ processRoster() {
                     if repoExists "$OUTPUT_FILE" "$REPO_NAME" >/dev/null; then
                         echo "  Status: Already exists. Skipping creation."
                     else
-						if createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
-							echo"  Status: Created"
+						if createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"; then
+							echo "  Status: Created"
 						else
-							echo"  Status: Failed to create"
+							echo "  Status: Failed to create"
                     fi
                 fi
 			else
