@@ -127,7 +127,9 @@ WSU_classroom -C demo-files/duncan_demo_restore.csv -O WSU-kduncan -A test5 -T p
 
 **Other Flags**
 
-
+| Option | Argument | Description |
+| --- | --- | --- |
+| `-h` | None | Displays the help message and exits. |
 
 > [!IMPORTANT]  
 > The `-O`, `-A`, `-T`, and `-C` options are REQUIRED to run this script.
