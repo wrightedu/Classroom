@@ -323,7 +323,7 @@ processRoster() {
 
                 if repoExists "$OUTPUT_FILE" "$REPO_NAME" >/dev/null; then
                     echo "  Status: Already exists. Skipping creation."
-                    GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
+                    # GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
                 else
                     if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
                     then
