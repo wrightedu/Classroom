@@ -207,20 +207,28 @@ checkTemplateRepo() {
 
 # Checks if a repository already exists in the specified GitHub organization
 # Inputs:
-#       ORGANIZATION - the GitHub organization
+#       OUTPUT_FILE - CSV file containing previously created repository links
 #       REPO_NAME - the repository name to check
 # Outputs:
 #       Returns 0 if the repository exists, 1 if it does not
 repoExists() {
 
     # Local variables
-    local ORGANIZATION="$1"
+    local OUTPUT_FILE="$1"
     local REPO_NAME="$2"
 
-    # Check if the repository exists
-    if gh repo view "$ORGANIZATION/$REPO_NAME" >/dev/null 2>&1; then
+    # Check if the output file exists
+    if [[ ! -f "$OUTPUT_FILE" ]]; then
+        echo "No output file found. Assuming no repositories have been created yet."
+        return 1
+    fi
+
+    # Check if repo is in the output file
+    if grep -Fq "$REPO_NAME" "$OUTPUT_FILE"; then
+        echo "Repository '$REPO_NAME' already exists."
         return 0
     else
+        echo "Repository '$REPO_NAME' does not exist."
         return 1
     fi
 }
@@ -265,6 +273,14 @@ processRoster() {
     local STUDENT_EMAIL
     local GENERATED_REPO_LINKS=()
     local REPO_NAME
+    local OUTPUT_FILE="${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv"
+
+	# Making the output user friendly
+	echo
+	echo "========================================"
+	echo "        PROCESSING REPOSITORIES         "
+	echo "========================================"
+	echo
 
     # Read the CSV file line by line, skipping the header, and process each entry
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
@@ -302,37 +318,56 @@ processRoster() {
 
                 REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
 
-                if repoExists "$ORGANIZATION" "$REPO_NAME"; then
-                    echo "Repository already exists for $NAME: $REPO_NAME"
-                    echo "Skipping repository creation."
+				echo "[STUDENT] $NAME"
+				echo "  Repository: $REPO_NAME"
+
+                if repoExists "$OUTPUT_FILE" "$REPO_NAME" >/dev/null; then
+                    echo "  Status: Already exists. Skipping creation."
                     GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
                 else
-
                     if createStudentRepo "$NAME" "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
                     then
+						echo "  Status: Created"
                         GENERATED_REPO_LINKS+=("$NAME,https://github.com/$ORGANIZATION/$REPO_NAME")
+					else
+						echo "  Status: Failed to create"
                     fi
                 fi
+
+				echo
                 ;;
 
             TA)
                 TAS+=("$EMAIL:$USERNAME")
 
+				echo "[TA] $USERNAME"
+
                 if [[ "$CREATE_TA_REPOS" =~ ^[Yy]$ ]]; then
 
                     REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
 
-                    if repoExists "$ORGANIZATION" "$REPO_NAME"; then
-                        echo "Repository already exists for $USERNAME: $REPO_NAME"
-                        echo "Skipping repository creation."
+					echo "  Repository: $REPO_NAME"
+
+                    if repoExists "$OUTPUT_FILE" "$REPO_NAME" >/dev/null; then
+                        echo "  Status: Already exists. Skipping creation."
                     else
-                        createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"
+						if createTARepo "$EMAIL" "$USERNAME" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM" "$TEMPLATE"; then
+							echo "  Status: Created"
+						else
+							echo "  Status: Failed to create"
                     fi
                 fi
-                ;;
+			else
+				echo "  Status: Repository not requested"
+			fi
+
+			echo
+            ;;
 
             Teacher | Instructor)
-                echo "$USERNAME is the instructor. No repository created."
+                echo "[INSTRUCTOR] $USERNAME"
+				echo "  No repository needed."
+				echo
                 ;;
 
             *)
@@ -343,8 +378,10 @@ processRoster() {
     done < "$CSV_FILE"
 
     if [[ "$GRANT_TA_ACCESS" =~ ^[Yy]$ ]]; then
-        echo
-        echo "Granting TA access..."
+        echo "========================================"
+    	echo "        GRANTING TA ACCESS              "
+   		echo "========================================"
+    	echo
 
         for TA in "${TAS[@]}"
         do
