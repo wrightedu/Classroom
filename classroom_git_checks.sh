@@ -292,6 +292,11 @@ processRoster() {
         ROLE=${ROLE//$'\r'/}
         USERNAME=${USERNAME//$'\r'/}
 
+        # Skip empty lines
+        if [[ -z "$NAME" && -z "$EMAIL" && -z "$ROLE" && -z "$USERNAME" ]]; then
+            continue
+        fi
+
         EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
 
         # Check for duplicate email identifiers and report an error if found

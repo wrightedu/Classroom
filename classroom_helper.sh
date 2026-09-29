@@ -332,7 +332,9 @@ configurationSummary() {
         USERNAME=${USERNAME//$'\r'/}
 
         # Skip empty lines
-        [[ -z "$NAME" && -z "$EMAIL" && -z "$ROLE" && -z "$USERNAME" ]] && continue
+        if [[ -z "$NAME" && -z "$EMAIL" && -z "$ROLE" && -z "$USERNAME" ]]; then
+            continue
+        fi
 
         # Count roles
         case "$ROLE" in
