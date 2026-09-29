@@ -331,6 +331,9 @@ configurationSummary() {
         ROLE=${ROLE//$'\r'/}
         USERNAME=${USERNAME//$'\r'/}
 
+        # Skip empty lines
+        [[ -z "$NAME" && -z "$EMAIL" && -z "$ROLE" && -z "$USERNAME" ]] && continue
+
         # Count roles
         case "$ROLE" in
             Student)
