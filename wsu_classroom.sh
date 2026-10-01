@@ -114,6 +114,15 @@ checkDueDate() {
     checkClonedRepos "$REPO_DIR" "$DEADLINE"
 }
 
+# Function to check the roster CSV file for missing or pending repository invitations and optionally resends them
+# Inputs:
+#       -O ORGANIZATION - GitHub organization
+#       -A ASSIGNMENT - Assignment name
+#       -C CSV_FILE - Class roster CSV file
+# Outputs:
+#       Prints the status of each student's repository invitation and optionally resends missing or pending invitations
+# State Changes:
+#       Missing or pending invitations may be resent to students
 checkInvites() {
     local ORGANIZATION
     local CSV_FILE
