@@ -117,15 +117,21 @@ checkDueDate() {
 checkInvites() {
     local ORGANIZATION
     local CSV_FILE
+    local ASSIGNMENT
+    local CURRENT_TERM
+    
     OPTIND=1
 
-    while getopts ":O:C:" opt; do
+    while getopts ":O:A:C:" opt; do
         case $opt in
             O)
                 ORGANIZATION="$OPTARG"
                 ;;
             C)
                 CSV_FILE="$OPTARG"
+                ;;
+            A)
+                ASSIGNMENT="$OPTARG"
                 ;;
             :)
                 echo "Error: Option -$OPTARG requires an argument."
@@ -140,9 +146,9 @@ checkInvites() {
         esac
     done
 
-    if [[ -z "$ORGANIZATION" || -z "$CSV_FILE" ]]; then
-        echo "Error: -O and -C are required."
-        echo "Usage: checkInvites -O ORGANIZATION -C CSV_FILE"
+    if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$CSV_FILE" ]]; then
+        echo "Error: -O, -A, -C are required."
+        echo "Usage: checkInvites -O ORGANIZATION -A ASSIGNMENT -C CSV_FILE"
         return 1
     fi
 
@@ -151,10 +157,14 @@ checkInvites() {
         return 1
     fi
 
+    CURRENT_TERM=$(getCurrentTerm)
+
     echo "Organization: $ORGANIZATION"
+    echo "Assignment: $ASSIGNMENT"
+    echo "Term: $CURRENT_TERM"
     echo "CSV file: $CSV_FILE"
 
-    checkRosterInvites "$CSV_FILE" "$ORGANIZATION"
+    checkRosterInvites "$CSV_FILE" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM"
 }
 
 # Main function for the WSU Classroom script

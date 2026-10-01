@@ -513,11 +513,15 @@ checkClonedRepos() {
 checkRosterInvites() {
     local CSV_FILE="$1"
     local ORGANIZATION="$2"
+    local ASSIGNMENT="$3"
+    local CURRENT_TERM="$4"
 
     local NAME
     local EMAIL
     local ROLE
     local USERNAME
+    local EMAIL_ID
+    local REPO_NAME
 
     echo
     echo "Checking roster invites for $ORGANIZATION..."
@@ -536,7 +540,11 @@ checkRosterInvites() {
         # Only check students
         [[ "$ROLE" != "Student" ]] && continue
 
+        EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+        REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
+
         echo "$NAME ($USERNAME)"
+        echo "  Repository: $REPO_NAME"
 
     done < "$CSV_FILE"
 
