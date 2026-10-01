@@ -114,6 +114,47 @@ checkDueDate() {
     checkClonedRepos "$REPO_DIR" "$DEADLINE"
 }
 
+checkInvites() {
+    local ORGANIZATION
+    local CSV_FILE
+    OPTIND=1
+
+    while getopts ":O:C:" opt; do
+        case $opt in
+            O)
+                ORGANIZATION="$OPTARG"
+                ;;
+            C)
+                CSV_FILE="$OPTARG"
+                ;;
+            :)
+                echo "Error: Option -$OPTARG requires an argument."
+                echo "Run 'checkInvites -h' for usage information."
+                return 1
+                ;;
+            \?)
+                echo "Error: Invalid option -$OPTARG"
+                echo "Run 'checkInvites -h' for usage information."
+                return 1
+                ;;
+        esac
+    done
+
+    if [[ -z "$ORGANIZATION" || -z "$CSV_FILE" ]]; then
+        echo "Error: -O and -C are required."
+        echo "Usage: checkInvites -O ORGANIZATION -C CSV_FILE"
+        return 1
+    fi
+
+    if [[ ! -f "$CSV_FILE" ]]; then
+        echo "Error: CSV file '$CSV_FILE' not found."
+        return 1
+    fi
+
+    echo "Organization: $ORGANIZATION"
+    echo "CSV file: $CSV_FILE"
+}
+
 # Main function for the WSU Classroom script
 # Inputs:
 #       -O ORGANIZATION - GitHub organization
