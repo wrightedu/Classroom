@@ -432,7 +432,7 @@ checkRepoDueDate() {
 # State Changes:
 #		None
 checkClonedRepos() {
-        local REPO_DIR="$1"
+    local REPO_DIR="$1"
     local DEADLINE="$2"
     local REPO
 
@@ -508,4 +508,201 @@ checkClonedRepos() {
             checkRepoDueDate "$GITHUB_REPO" "$USERNAME" "$DEADLINE"
         )
     done
+}
+
+# Checks the roster CSV file for missing or pending repository invitations and optionally resends them
+# Inputs:
+#		CSV_FILE - CSV file containing names, GitHub usernames, and roles
+#		ORGANIZATION - GitHub organization
+#		ASSIGNMENT - Assignment name
+#		CURRENT_TERM - Current academic term
+# Outputs:
+#		Prints the status of each student's repository invitation and optionally resends missing or pending invitations
+# State Changes:
+#		Missing or pending invitations may be resent to students
+checkRosterInvites() {
+    local CSV_FILE="$1"
+    local ORGANIZATION="$2"
+    local ASSIGNMENT="$3"
+    local CURRENT_TERM="$4"
+
+    local NAME
+    local EMAIL
+    local ROLE
+    local USERNAME
+    local EMAIL_ID
+    local REPO_NAME
+    local PENDING_INVITE
+
+    local MISSING_INVITES=()
+    local MISSING_NAMES=()
+
+    local PENDING_INVITES=()
+    local PENDING_NAMES=()
+    local PENDING_IDS=()
+
+    local RESEND
+    local i
+
+    echo
+    echo "Checking roster invites for $ORGANIZATION..."
+    echo
+
+    while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
+    do
+        [[ "$NAME" == "Name" ]] && continue
+
+        # Remove carriage returns
+        NAME=${NAME//$'\r'/}
+        EMAIL=${EMAIL//$'\r'/}
+        ROLE=${ROLE//$'\r'/}
+        USERNAME=${USERNAME//$'\r'/}
+
+        # Only check students
+        [[ "$ROLE" != "Student" ]] && continue
+
+        # Generate the expected repository name
+        EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
+        REPO_NAME=$(generateRepoName "$ASSIGNMENT" "$EMAIL_ID" "$CURRENT_TERM")
+
+        echo "$NAME ($USERNAME)"
+        echo "  Repository: $REPO_NAME"
+
+        # Check if the repository exists
+        if ! gh repo view "$ORGANIZATION/$REPO_NAME" >/dev/null 2>&1; then
+            echo "  Status: REPOSITORY NOT FOUND"
+            echo
+            continue
+        fi
+
+        # Check if the student has accepted the repository invitation
+        if gh api \
+            "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
+            >/dev/null 2>&1
+        then
+            echo "  Status: ACCEPTED"
+            echo
+            continue
+        fi
+
+        # Check if the student has a pending repository invitation
+        PENDING_INVITE=$(gh api \
+            "/repos/$ORGANIZATION/$REPO_NAME/invitations" \
+            --jq ".[] | select(.invitee.login == \"$USERNAME\") | .id" \
+            2>/dev/null)
+
+        if [[ -n "$PENDING_INVITE" ]]; then
+            echo "  Status: PENDING INVITATION"
+
+            PENDING_INVITES+=("$REPO_NAME:$USERNAME")
+            PENDING_NAMES+=("$NAME")
+            PENDING_IDS+=("$PENDING_INVITE")
+        else
+            echo "  Status: MISSING INVITATION"
+
+            MISSING_INVITES+=("$REPO_NAME:$USERNAME")
+            MISSING_NAMES+=("$NAME")
+        fi
+
+        echo
+
+    done < "$CSV_FILE"
+
+    # If there are no missing or pending invitations, everyone is good
+    if [[ ${#MISSING_INVITES[@]} -eq 0 && ${#PENDING_INVITES[@]} -eq 0 ]]; then
+        echo "All students have accepted their repository invitations."
+        return 0
+    fi
+
+    echo "========================================"
+    echo "Invitation Summary"
+    echo "========================================"
+
+    # Display missing invitations
+    if [[ ${#MISSING_INVITES[@]} -gt 0 ]]; then
+        echo
+        echo "Missing invitations: ${#MISSING_INVITES[@]}"
+
+        for i in "${!MISSING_INVITES[@]}"
+        do
+            echo "  ${MISSING_NAMES[$i]}"
+        done
+    fi
+
+    # Display pending invitations
+    if [[ ${#PENDING_INVITES[@]} -gt 0 ]]; then
+        echo
+        echo "Pending invitations: ${#PENDING_INVITES[@]}"
+
+        for i in "${!PENDING_INVITES[@]}"
+        do
+            echo "  ${PENDING_NAMES[$i]}"
+        done
+    fi
+
+    echo
+    read -p "Would you like to resend missing and pending invitations? (Y/N) [Y]: " RESEND
+    RESEND="${RESEND:-Y}"
+
+    if [[ ! "$RESEND" =~ ^[Yy]$ ]]; then
+        echo "No invitations were resent."
+        return 0
+    fi
+
+    # Send missing invitations
+    for i in "${!MISSING_INVITES[@]}"
+    do
+        REPO_NAME="${MISSING_INVITES[$i]%%:*}"
+        USERNAME="${MISSING_INVITES[$i]#*:}"
+
+        echo
+        echo "Sending invitation to ${MISSING_NAMES[$i]}..."
+
+        if gh api \
+            -X PUT \
+            "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
+            -f permission="push" \
+            >/dev/null </dev/null
+        then
+            echo "  Invitation sent."
+        else
+            echo "  Error: Failed to send invitation."
+        fi
+    done
+
+    # Refresh pending invitations
+    for i in "${!PENDING_INVITES[@]}"
+    do
+        REPO_NAME="${PENDING_INVITES[$i]%%:*}"
+        USERNAME="${PENDING_INVITES[$i]#*:}"
+        PENDING_INVITE="${PENDING_IDS[$i]}"
+
+        echo
+        echo "Resending invitation to ${PENDING_NAMES[$i]}..."
+
+        # Delete the existing pending invitation
+        if ! gh api \
+            -X DELETE \
+            "/repos/$ORGANIZATION/$REPO_NAME/invitations/$PENDING_INVITE" \
+            >/dev/null </dev/null
+        then
+            echo "  Error: Failed to remove existing invitation."
+            continue
+        fi
+
+        # Create a fresh invitation
+        if gh api \
+            -X PUT \
+            "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
+            -f permission="push" \
+            >/dev/null </dev/null
+        then
+            echo "  Invitation resent."
+        else
+            echo "  Error: Failed to resend invitation."
+        fi
+    done
+
+    echo
+    echo "Finished processing invitations."
 }
