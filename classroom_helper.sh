@@ -177,15 +177,15 @@ exportRepoLinks() {
 
     # Sort the generated repository links by name and export them to the CSV file
     printf "%s\n" "${GENERATED_REPO_LINKS[@]}" \
-        | awk -F',' '{
-            split($1, name, " ")
-            print name[length(name)] "," $0
-        }' \
-        | sort -t',' -k1,1 \
-        | cut -d',' -f2- \
-        >> "$OUTPUT_FILE"
+    | awk -F',' '{
+        split($1, name, " ")
+        print name[length(name)] "," $0
+    }' \
+    | sort -t',' -k1,1 \
+    | cut -d',' -f2- \
+    >> "$OUTPUT_FILE"
 
-    echo "Repository links exported to $OUTPUT_FILE"
+    echo "Exported repo links to $(pwd)/$OUTPUT_FILE"
 }
 
 # Generates a unique identifier from an email address by removing the domain and any periods
@@ -316,6 +316,7 @@ configurationSummary() {
     local INVALID_EMAIL
     local INVALID_ROLE
     local INVALID_USERNAME
+    local REPO_LINKS_FILE="$(pwd)/${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv"
 
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
@@ -349,23 +350,24 @@ configurationSummary() {
     done < "$CSV_FILE"
 
     echo
-    echo "========================================"
-    echo "        CONFIGURATION SUMMARY"
-    echo "========================================"
+    echo "================================================"
+    echo "              CONFIGURATION SUMMARY"
+    echo "================================================"    
     echo
-    echo "Organization:          $ORGANIZATION"
-    echo "Assignment:            $ASSIGNMENT"
-    echo "Term:                  $CURRENT_TERM"
-    echo "Template:              $TEMPLATE"
-    echo "Roster:                $CSV_FILE"
+    echo "Organization:             $ORGANIZATION"
+    echo "Assignment:               $ASSIGNMENT"
+    echo "Term:                     $CURRENT_TERM"
+    echo "Template:                 $TEMPLATE"
+    echo "Roster:                   $CSV_FILE"
+    echo "Repository Exported to:   $REPO_LINKS_FILE"
     echo
-    echo "Students:              $STUDENT_COUNT"
-    echo "TAs:                   $TA_COUNT"
-    echo "Instructors:           $INSTRUCTOR_COUNT"
-    echo "Invalid usernames:     ${#INVALID_USERS[@]}"
+    echo "Students:                 $STUDENT_COUNT"
+    echo "TAs:                      $TA_COUNT"
+    echo "Instructors:              $INSTRUCTOR_COUNT"
+    echo "Invalid usernames:        ${#INVALID_USERS[@]}"
     echo
-    echo "Create TA repos:       $CREATE_TA_REPOS"
-    echo "Grant TA access:       $GRANT_TA_ACCESS"
+    echo "Create TA repos:          $CREATE_TA_REPOS"
+    echo "Grant TA access:          $GRANT_TA_ACCESS"
 
     if [[ ${#INVALID_USERS[@]} -gt 0 ]]; then
         echo
@@ -387,7 +389,7 @@ configurationSummary() {
     fi
 
     echo
-    echo "========================================"
+    echo "================================================"  
 }
 
 # Formats a due date string into UTC format
