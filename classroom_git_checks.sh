@@ -546,6 +546,35 @@ checkRosterInvites() {
         echo "$NAME ($USERNAME)"
         echo "  Repository: $REPO_NAME"
 
+        if ! gh repo view "$ORGANIZATION/$REPO_NAME" >/dev/null 2>&1; then
+            echo "  Status: REPOSITORY NOT FOUND"
+            echo
+            continue
+        fi
+
+        # Check if the student has accepted the repository invitation
+        if gh api \
+            "/repos/$ORGANIZATION/$REPO_NAME/collaborators/$USERNAME" \
+            >/dev/null 2>&1
+        then
+            echo "  Status: ACCEPTED"
+            echo
+        continue
+        fi
+
+        # Check if the student has a pending repository invitation
+        PENDING_INVITE=$(gh api \
+            "/repos/$ORGANIZATION/$REPO_NAME/invitations" \
+            --jq ".[] | select(.invitee.login == \"$USERNAME\") | .id" \
+            2>/dev/null)
+
+        if [[ -n "$PENDING_INVITE" ]]; then
+            echo "  Status: PENDING"
+        else
+            echo "  Status: MISSING"
+        fi
+        echo
+
     done < "$CSV_FILE"
 
 }
