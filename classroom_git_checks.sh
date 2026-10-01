@@ -432,7 +432,7 @@ checkRepoDueDate() {
 # State Changes:
 #		None
 checkClonedRepos() {
-        local REPO_DIR="$1"
+    local REPO_DIR="$1"
     local DEADLINE="$2"
     local REPO
 
@@ -508,4 +508,36 @@ checkClonedRepos() {
             checkRepoDueDate "$GITHUB_REPO" "$USERNAME" "$DEADLINE"
         )
     done
+}
+
+checkRosterInvites() {
+    local CSV_FILE="$1"
+    local ORGANIZATION="$2"
+
+    local NAME
+    local EMAIL
+    local ROLE
+    local USERNAME
+
+    echo
+    echo "Checking roster invites for $ORGANIZATION..."
+    echo
+
+    while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
+    do
+        [[ "$NAME" == "Name" ]] && continue
+
+        # Remove carriage returns
+        NAME=${NAME//$'\r'/}
+        EMAIL=${EMAIL//$'\r'/}
+        ROLE=${ROLE//$'\r'/}
+        USERNAME=${USERNAME//$'\r'/}
+
+        # Only check students
+        [[ "$ROLE" != "Student" ]] && continue
+
+        echo "$NAME ($USERNAME)"
+
+    done < "$CSV_FILE"
+
 }

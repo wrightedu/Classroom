@@ -153,6 +153,8 @@ checkInvites() {
 
     echo "Organization: $ORGANIZATION"
     echo "CSV file: $CSV_FILE"
+
+    checkRosterInvites "$CSV_FILE" "$ORGANIZATION"
 }
 
 # Main function for the WSU Classroom script
