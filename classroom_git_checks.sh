@@ -224,7 +224,22 @@ repoExists() {
     fi
 
     # Check if repo is in the output file
-    if grep -Fq "$REPO_NAME" "$OUTPUT_FILE"; then
+    if awk -F, -v repo="$REPO_NAME" '
+        NR > 1 {
+            link = $2
+            sub(/\r$/, "", link)
+            sub(/\/$/, "", link)
+            n = split(link, parts, "/")
+
+            if (parts[n] == repo) {
+                found = 1
+                exit
+            }
+        }
+        END {
+            exit !found
+        }
+    ' "$OUTPUT_FILE"; then
         echo "Repository '$REPO_NAME' already exists."
         return 0
     else
@@ -232,7 +247,6 @@ repoExists() {
         return 1
     fi
 }
-
 # Processes the CSV file containing names, GitHub usernames, and roles, and creates repositories accordingly
 # Inputs:
 #		CSV_FILE - CSV file containing names, GitHub usernames, and roles
@@ -291,6 +305,11 @@ processRoster() {
         EMAIL=${EMAIL//$'\r'/}
         ROLE=${ROLE//$'\r'/}
         USERNAME=${USERNAME//$'\r'/}
+
+        # Skip empty lines
+        if [[ -z "$NAME" && -z "$EMAIL" && -z "$ROLE" && -z "$USERNAME" ]]; then
+            continue
+        fi
 
         EMAIL_ID=$(generateEmailIdentifier "$EMAIL")
 
