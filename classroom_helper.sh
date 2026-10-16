@@ -3,7 +3,7 @@
 #       None
 # Outputs:
 #       Prints usage information for WSU_classroom, cloneRepositories,
-#       and checkDueDate
+#       checkDueDate, and checkInvites commands
 # State Changes:
 #       None
 usage() {
@@ -39,6 +39,14 @@ usage() {
     echo
     echo "      -D due_date      Assignment deadline."
     echo "                       If no time is provided, defaults to 11:59 PM."
+    echo
+    echo "  checkInvites -O <organization> -A <assignment> -C <csv_file>"
+    echo "      Check student repository invitation statuses and optionally resend"
+    echo "      missing or pending invitations."
+    echo
+    echo "      -O organization   GitHub organization containing the repositories."
+    echo "      -A assignment     Assignment name used in repository names."
+    echo "      -C csv_file       Class roster CSV containing Name, Email, Role, and Username."
     echo
     echo "=========================================================================================="
     return 0
