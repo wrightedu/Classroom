@@ -1,23 +1,90 @@
 #!/bin/bash
-# Function to clone repositories from a CSV file during the WSU Classroom script execution or as a standalone function
+# Function to clone repositories from a CSV file into an assignment directory
 # Inputs:
-#       User input - CSV file containing repository names and links
-#       User input - Directory to clone the repositories into
+#       REPO_FILE - CSV file containing repository names and links
+#       ASSIGNMENT - Assignment name
+#       CURRENT_TERM - Current academic term
+#       If no arguments are provided, prompts the user to select a CSV file
 # Outputs:
-#       Clones the repositories into the specified directory
+#       Clones repositories into a directory named assignment-term
 # State Changes:
-#       Repositories are cloned into the specified directory
+#       Creates an assignment-term directory and clones repositories into it
 cloneRepositories() {
 
-    local REPO_FILE
+    # Declare local variables
+    local REPO_FILE="$1"
+    local ASSIGNMENT="$2"
+    local CURRENT_TERM="$3"
+
     local CLONE_DIR
-    local CREATE
     local NAME
     local REPO_LINK
     local REPO_NAME
 
-    # Ask the user for the repository links CSV file
-    read -p "Enter the repository links CSV file: " REPO_FILE
+    local CSV_FILES=()
+    local CSV_COUNT
+    local SELECTION
+    local CONFIRM
+    local FILE
+
+    # If no repository file was passed, look for CSV files
+    # in the current directory
+    if [[ -z "$REPO_FILE" ]]; then
+
+        for FILE in ./*.csv; do
+            [[ -f "$FILE" ]] && CSV_FILES+=("$FILE")
+        done
+
+        CSV_COUNT=${#CSV_FILES[@]}
+
+        # No CSV files found
+        if [[ "$CSV_COUNT" -eq 0 ]]; then
+            echo "Error: No CSV files found in $(pwd)."
+            echo "Run cloneRepositories from a directory containing a repository links CSV file."
+            return 1
+        fi
+
+        # Only one CSV file found
+        if [[ "$CSV_COUNT" -eq 1 ]]; then
+            echo "Found CSV file:"
+            echo "  ${CSV_FILES[0]}"
+            echo
+
+            read -p "Would you like to use this file? (Y/N) [Y]: " CONFIRM
+            CONFIRM="${CONFIRM:-Y}"
+
+            if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+                echo "Repository cloning cancelled."
+                return 0
+            fi
+
+            REPO_FILE="${CSV_FILES[0]}"
+
+        # Multiple CSV files found
+        else
+            echo "CSV files found:"
+            echo
+
+            for ((i=0; i<CSV_COUNT; i++)); do
+                echo "$((i + 1)). ${CSV_FILES[$i]}"
+            done
+
+            echo
+            read -p "Select the repository links CSV file (1-$CSV_COUNT): " SELECTION
+
+            # Validate selection
+            if [[ ! "$SELECTION" =~ ^[0-9]+$ ]] ||
+               (( SELECTION < 1 || SELECTION > CSV_COUNT )); then
+                echo "Error: Invalid selection."
+                return 1
+            fi
+
+            REPO_FILE="${CSV_FILES[$((SELECTION - 1))]}"
+        fi
+
+        echo
+        echo "Selected: $REPO_FILE"
+    fi
 
     # Verify the repository links file exists
     if [[ ! -f "$REPO_FILE" ]]; then
@@ -25,25 +92,53 @@ cloneRepositories() {
         return 1
     fi
 
-    echo "Using repository links file: $REPO_FILE"
+    #
+    # If assignment and term were not passed, determine them
+    # from the repository links filename.
+    #
+    # Expected format:
+    # assignment-term-repo-links.csv
+    #
+    if [[ -z "$ASSIGNMENT" || -z "$CURRENT_TERM" ]]; then
 
-    # Ask where the repositories should be cloned
-    read -p "Enter the directory to clone repositories into: " CLONE_DIR
-    # handling tildes
-    eval CLONE_DIR="$CLONE_DIR"
+        local FILE_NAME
+        local BASE_NAME
 
-    # Create the directory if it does not exist
-    if [[ ! -d "$CLONE_DIR" ]]; then
-        read -p "Directory does not exist. Create it? (Y/N) [Y]: " CREATE
-        CREATE="${CREATE:-Y}"
+        FILE_NAME="${REPO_FILE##*/}"
+        BASE_NAME="${FILE_NAME%-repo-links.csv}"
 
-        if [[ "$CREATE" =~ ^[Yy]$ ]]; then
-            mkdir -p "$CLONE_DIR"
+        if [[ "$FILE_NAME" =~ -((f|s|su)[0-9]{2})-repo-links\.csv$ ]]; then
+
+            CURRENT_TERM="${BASH_REMATCH[1]}"
+            ASSIGNMENT="${BASE_NAME%-$CURRENT_TERM}"
+
         else
-            echo "Skipping repository cloning."
-            return 0
+            echo "Error: '$FILE_NAME' does not appear to be a repository links CSV file."
+            echo "Expected filename format:"
+            echo "  <assignment>-<term>-repo-links.csv"
+            return 1
         fi
     fi
+
+    CLONE_DIR="${ASSIGNMENT}-${CURRENT_TERM}"
+
+    echo
+    echo "Using repository links file: $REPO_FILE"
+    echo "Assignment: $ASSIGNMENT"
+    echo "Term: $CURRENT_TERM"
+
+    # Create the assignment directory if it does not exist
+    if [[ ! -d "$CLONE_DIR" ]]; then
+        mkdir -p "$CLONE_DIR"
+
+        if [[ $? -ne 0 ]]; then
+            echo "Error: Could not create directory '$CLONE_DIR'."
+            return 1
+        fi
+    fi
+
+    echo "Cloning repositories into: $(pwd)/$CLONE_DIR"
+    echo
 
     # Read repository information from the CSV file
     while IFS=',' read -r NAME REPO_LINK || [[ -n "$NAME" ]]
@@ -63,11 +158,22 @@ cloneRepositories() {
 
         echo "Cloning $NAME: $REPO_NAME..."
 
-        gh repo clone "$REPO_LINK" "$CLONE_DIR/$REPO_NAME"
+        # Skip repository if it has already been cloned
+        if [[ -d "$CLONE_DIR/$REPO_NAME" ]]; then
+            echo "Repository already exists. Skipping."
+            continue
+        fi
+
+        # Clone repository into assignment directory
+        if ! gh repo clone "$REPO_LINK" "$CLONE_DIR/$REPO_NAME"; then
+            echo "Error: Failed to clone $REPO_NAME."
+        fi
 
     done < "$REPO_FILE"
 
+    echo
     echo "Finished cloning repositories."
+    echo "Repositories cloned to: $(pwd)/$CLONE_DIR"
 }
 
 # Function to check if the user has pushed to the repository before the deadline
@@ -241,8 +347,10 @@ WSU_classroom() (
     CLONE="${CLONE:-N}"
 
     if [[ "$CLONE" =~ ^[Yy]$ ]]; then
-        cloneRepositories
-        echo "All repositories cloned."
+        cloneRepositories \
+        "${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv" \
+        "$ASSIGNMENT" \
+        "$CURRENT_TERM"
     else
         echo "Skipping repository cloning."
     fi
