@@ -116,18 +116,23 @@ Example:
 WSU_classroom -C demo-files/duncan_demo_restore.csv -O WSU-kduncan -A test5 -T pattonsgirl/CEG2350-LabTemplate
 ```
 
-**Flags**
+**Required Flags**
 
 | Option | Argument | Description |
 | --- | --- | --- |
-| `-h` | None | Displays the help message and exits. |
 | `-O` | Organization | Specifies the GitHub organization where repositories will be created. |
 | `-A` | Assignment | Specifies the assignment name used to generate repository names. |
 | `-T` | Template | Specifies the GitHub template repository used to create student repositories. |
 | `-C` | CSV File | Specifies the class roster CSV file to process. |
 
+**Other Flags**
+
+| Option | Argument | Description |
+| --- | --- | --- |
+| `-h` | None | Displays the help message and exits. |
+
 > [!IMPORTANT]  
-> The `-O`, `-A`, `-T`, and `-C` options are required.
+> The `-O`, `-A`, `-T`, and `-C` options are REQUIRED to run this script.
 
 When the command is run, WSU Classroom validates the provided configuration and processes the class roster. During execution, the user may be prompted for additional options, including TA repository creation, TA access to student repositories, and cloning student repositories to the local machine.
 
