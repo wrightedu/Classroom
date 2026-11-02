@@ -114,6 +114,68 @@ checkDueDate() {
     checkClonedRepos "$REPO_DIR" "$DEADLINE"
 }
 
+# Function to check the roster CSV file for missing or pending repository invitations and optionally resends them
+# Inputs:
+#       -O ORGANIZATION - GitHub organization
+#       -A ASSIGNMENT - Assignment name
+#       -C CSV_FILE - Class roster CSV file
+# Outputs:
+#       Prints the status of each student's repository invitation and optionally resends missing or pending invitations
+# State Changes:
+#       Missing or pending invitations may be resent to students
+checkInvites() {
+    local ORGANIZATION
+    local CSV_FILE
+    local ASSIGNMENT
+    local CURRENT_TERM
+    
+    OPTIND=1
+
+    while getopts ":O:A:C:" opt; do
+        case $opt in
+            O)
+                ORGANIZATION="$OPTARG"
+                ;;
+            C)
+                CSV_FILE="$OPTARG"
+                ;;
+            A)
+                ASSIGNMENT="$OPTARG"
+                ;;
+            :)
+                echo "Error: Option -$OPTARG requires an argument."
+                echo "Run 'checkInvites -h' for usage information."
+                return 1
+                ;;
+            \?)
+                echo "Error: Invalid option -$OPTARG"
+                echo "Run 'checkInvites -h' for usage information."
+                return 1
+                ;;
+        esac
+    done
+
+    if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$CSV_FILE" ]]; then
+        echo "Error: -O, -A, -C are required."
+        echo "Usage: checkInvites -O ORGANIZATION -A ASSIGNMENT -C CSV_FILE"
+        return 1
+    fi
+
+    if [[ ! -f "$CSV_FILE" ]]; then
+        echo "Error: CSV file '$CSV_FILE' not found."
+        return 1
+    fi
+
+    CURRENT_TERM=$(getCurrentTerm)
+
+    echo "Organization: $ORGANIZATION"
+    echo "Assignment: $ASSIGNMENT"
+    echo "Term: $CURRENT_TERM"
+    echo "CSV file: $CSV_FILE"
+
+    checkRosterInvites "$CSV_FILE" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM"
+}
+
 # Main function for the WSU Classroom script
 # Inputs:
 #       -O ORGANIZATION - GitHub organization
