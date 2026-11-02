@@ -206,7 +206,10 @@ WSU_classroom() (
     isGitAuth
 
     # verify ownership of the organization
-    checkOrganizationOwnership "$ORGANIZATION"
+    if ! checkOrganizationOwnership "$ORGANIZATION"; then
+        echo "Error: You do not have ownership of the organization '$ORGANIZATION'."
+        return 1
+    fi
 
     # verify that the specified template repository exists and is a template repository
     checkTemplateRepo "$TEMPLATE"
