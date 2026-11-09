@@ -1,3 +1,144 @@
+# Initializes WSU Classroom configuration in the current course directory
+# Inputs:
+#       -O ORGANIZATION - GitHub organization (optional)
+#       -A ASSIGNMENT - Assignment name (optional)
+#       -T TEMPLATE - Template repository (optional)
+#       -C CSV_FILE - Class roster (optional)
+# Outputs:
+#       Creates .wsu_classroom/.env and assignment.conf
+# State Changes:
+#       Creates or replaces local configuration with confirmation
+initClassroom() {
+    local ORGANIZATION=""
+    local ASSIGNMENT=""
+    local TEMPLATE=""
+    local CSV_FILE=""
+    local CONFIG_DIR=".wsu_classroom"
+    local CONFIRM
+    local OPTIND=1
+    local opt
+
+    while getopts ":hO:A:T:C:" opt; do
+        case "$opt" in
+            O) ORGANIZATION="$OPTARG" ;;
+            A) ASSIGNMENT="$OPTARG" ;;
+            T) TEMPLATE="$OPTARG" ;;
+            C) CSV_FILE="$OPTARG" ;;
+            h)
+                echo "Usage: WSU_classroom init [-O org] [-A assignment] [-T owner/repo] [-C roster.csv]"
+                return 0
+                ;;
+            :)
+                echo "Error: -$OPTARG requires an argument."
+                return 1
+                ;;
+            \?)
+                echo "Error: Invalid option -$OPTARG"
+                return 1
+                ;;
+        esac
+    done
+
+    shift $((OPTIND - 1))
+
+    if (( $# > 0 )); then
+        echo "Error: Unexpected argument: $1"
+        return 1
+    fi
+
+    # Warn before overwriting existing configuration
+    if [[ -e "$CONFIG_DIR/.env" ||
+          -e "$CONFIG_DIR/assignment.conf" ]]; then
+
+        echo "Warning: Existing configuration detected."
+        read -r -p "Overwrite configuration? (y/N): " CONFIRM
+
+        if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+            echo "Initialization cancelled."
+            return 0
+        fi
+    fi
+
+    # Prompt for missing configuration values
+    while [[ -z "$ORGANIZATION" ]]; do
+        read -r -p "GitHub organization: " ORGANIZATION || return 1
+    done
+
+    while [[ -z "$ASSIGNMENT" ]]; do
+        read -r -p "Assignment name: " ASSIGNMENT || return 1
+    done
+
+    while [[ -z "$TEMPLATE" ]]; do
+        read -r -p "Template repository (owner/repo): " TEMPLATE || return 1
+    done
+
+    while [[ -z "$CSV_FILE" ]]; do
+        read -r -p "Roster CSV file: " CSV_FILE || return 1
+    done
+
+    # Validate configuration values
+    if [[ ! "$ORGANIZATION" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]*$ || ! "$ASSIGNMENT" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*$ || ! "$TEMPLATE" =~ ^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$ ]]; then
+        echo "Error: Invalid organization, assignment, or template."
+        return 1
+    fi
+
+    # Prevent unsafe values in sourced configuration
+    if [[ "$CSV_FILE" == *$'\n'* ||
+          "$CSV_FILE" == *$'\r'* ]]; then
+        echo "Error: Invalid roster path."
+        return 1
+    fi
+
+    if [[ ! -f "$CSV_FILE" ]]; then
+        echo "Warning: Roster '$CSV_FILE' does not exist yet."
+    fi
+
+    # Create configuration directory
+    if ! mkdir -p "$CONFIG_DIR"; then
+        echo "Error: Could not create $CONFIG_DIR."
+        return 1
+    fi
+
+    # Create temporary configuration files
+    local ENV_TMP
+    local ASSIGNMENT_TMP
+
+    ENV_TMP=$(mktemp "$CONFIG_DIR/.env.tmp.XXXXXX") || return 1
+    ASSIGNMENT_TMP=$(mktemp "$CONFIG_DIR/assignment.tmp.XXXXXX") || {
+        rm -f "$ENV_TMP"
+        return 1
+    }
+
+    chmod 600 "$ENV_TMP" "$ASSIGNMENT_TMP"
+
+    printf 'WSU_ORG=%q\n' "$ORGANIZATION" > "$ENV_TMP"
+
+    {
+        printf 'WSU_ASSIGNMENT=%q\n' "$ASSIGNMENT"
+        printf 'WSU_TEMPLATE=%q\n' "$TEMPLATE"
+        printf 'WSU_CSV=%q\n' "$CSV_FILE"
+    } > "$ASSIGNMENT_TMP"
+
+    if ! mv -f "$ENV_TMP" "$CONFIG_DIR/.env" || ! mv -f "$ASSIGNMENT_TMP" "$CONFIG_DIR/assignment.conf"; then
+        rm -f "$ENV_TMP" "$ASSIGNMENT_TMP"
+        echo "Error: Failed to save configuration."
+        return 1
+    fi
+
+    echo
+    echo "========================================"
+    echo "   WSU CLASSROOM INITIALIZED"
+    echo "========================================"
+    echo "Organization: $ORGANIZATION"
+    echo "Assignment:   $ASSIGNMENT"
+    echo "Template:     $TEMPLATE"
+    echo "Roster:       $CSV_FILE"
+    echo "Directory:    $(pwd)/$CONFIG_DIR"
+    echo
+    echo "Initialization complete!"
+}
+
+
 # Displays the usage information for the WSU Classroom tools
 # Inputs:
 #       None
@@ -12,6 +153,7 @@ usage() {
     echo "=========================================================================================="
     echo "Usage:"
     echo "  WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>"
+    echo "  WSU_classroom init [-O organization] [-A assignment] [-T template] [-C csv_file]"
     echo "  WSU_classroom -h"
     echo
     echo "Required Options:"
@@ -47,6 +189,11 @@ usage() {
     echo "      -O organization   GitHub organization containing the repositories."
     echo "      -A assignment     Assignment name used in repository names."
     echo "      -C csv_file       Class roster CSV containing Name, Email, Role, and Username."
+    echo
+    echo "  WSU_classroom init"
+    echo "      Initialize WSU Classroom in the current course directory."
+    echo "      Creates .wsu_classroom/.env and assignment.conf."
+    echo "      Prompts for missing configuration values."
     echo
     echo "=========================================================================================="
     return 0

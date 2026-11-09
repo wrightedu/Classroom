@@ -73,8 +73,7 @@ cloneRepositories() {
             read -p "Select the repository links CSV file (1-$CSV_COUNT): " SELECTION
 
             # Validate selection
-            if [[ ! "$SELECTION" =~ ^[0-9]+$ ]] ||
-               (( SELECTION < 1 || SELECTION > CSV_COUNT )); then
+            if [[ ! "$SELECTION" =~ ^[0-9]+$ ]] || (( SELECTION < 1 || SELECTION > CSV_COUNT )); then
                 echo "Error: Invalid selection."
                 return 1
             fi
@@ -306,22 +305,39 @@ WSU_classroom() (
     local GRANT_TA_ACCESS="N"
     local CLONE
 
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    SCRIPT_DIR="${WSU_CLASSROOM_SCRIPT_DIR:-$HOME/.wsu_classroom}"
 
     source "$SCRIPT_DIR/classroom_git_checks.sh"
     source "$SCRIPT_DIR/classroom_helper.sh"
+
+    if [[ "$1" == "init" ]]; then
+        shift
+        initClassroom "$@"
+        return $?
+    fi
 
     if [[ "$1" == "-h" && "$#" -eq 1 ]]; then
         usage
         return 0
     fi
 
-    # process the command line arguments
-    # if no arguments are provided, display usage information and exit
-    if [ $# -eq 0 ]; then
-        echo "No arguments provided."
+    if [[ $# -eq 0 ]] && [[ ! -f .wsu_classroom/.env || ! -f .wsu_classroom/assignment.conf ]]; then
+        echo "No arguments provided and no local configuration found."
         usage
         return 1
+    fi
+
+    # Load local configuration as defaults
+    if [[ -f .wsu_classroom/.env ]]; then
+        source .wsu_classroom/.env
+        ORGANIZATION="${WSU_ORG:-}"
+    fi
+
+    if [[ -f .wsu_classroom/assignment.conf ]]; then
+        source .wsu_classroom/assignment.conf
+        ASSIGNMENT="${WSU_ASSIGNMENT:-}"
+        TEMPLATE="${WSU_TEMPLATE:-}"
+        CSV_FILE="${WSU_CSV:-}"
     fi
 
     # reset the option index for getopts
@@ -363,10 +379,22 @@ WSU_classroom() (
         esac
     done
 
+    # Determine current term for saved or command-line assignments
+    if [[ -n "$ASSIGNMENT" ]]; then
+        CURRENT_TERM=$(getCurrentTerm)
+        REPO_NAME="$ASSIGNMENT-email-$CURRENT_TERM"
+    fi
+
     # make sure both an organization and assignment were provided
     if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
         echo "Error: -O -A -T -C are required."
         repoGenerationUsage
+        return 1
+    fi
+
+    # Verify that the roster CSV exists before proceeding
+    if [[ ! -f "$CSV_FILE" ]]; then
+        echo "Error: CSV file '$CSV_FILE' not found."
         return 1
     fi
 
