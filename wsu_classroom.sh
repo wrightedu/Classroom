@@ -321,12 +321,6 @@ WSU_classroom() (
         return 0
     fi
 
-    if [[ $# -eq 0 ]] && [[ ! -f .wsu_classroom/.env || ! -f .wsu_classroom/assignment.conf ]]; then
-        echo "No arguments provided and no local configuration found."
-        usage
-        return 1
-    fi
-
     # Load local configuration as defaults
     if [[ -f .wsu_classroom/.env ]]; then
         source .wsu_classroom/.env
@@ -385,12 +379,32 @@ WSU_classroom() (
         REPO_NAME="$ASSIGNMENT-email-$CURRENT_TERM"
     fi
 
-    # make sure both an organization and assignment were provided
-    if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
-        echo "Error: -O -A -T -C are required."
-        repoGenerationUsage
-        return 1
+    # Prompt for any required options not supplied by config or CLI
+    if [[ -z "$ORGANIZATION" ]]; then
+        read -r -p "GitHub organization: " ORGANIZATION
     fi
+
+    if [[ -z "$ASSIGNMENT" ]]; then
+        read -r -p "Assignment name: " ASSIGNMENT
+    fi
+
+    if [[ -z "$TEMPLATE" ]]; then
+        read -r -p "Template repository (owner/repo): " TEMPLATE
+    fi
+
+    if [[ -z "$CSV_FILE" ]]; then
+        read -r -p "Roster CSV path: " CSV_FILE
+    fi
+
+# Validate that all required options were provided
+if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
+    echo "Error: All configuration values are required."
+    return 1
+fi
+
+# Generate repository name after resolving all options
+CURRENT_TERM=$(getCurrentTerm)
+REPO_NAME="${ASSIGNMENT}-email-${CURRENT_TERM}"
 
     # Verify that the roster CSV exists before proceeding
     if [[ ! -f "$CSV_FILE" ]]; then
