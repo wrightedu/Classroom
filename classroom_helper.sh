@@ -47,8 +47,7 @@ initClassroom() {
     fi
 
     # Warn before overwriting existing configuration
-    if [[ -e "$CONFIG_DIR/.env" ||
-          -e "$CONFIG_DIR/assignment.conf" ]]; then
+    if [[ -e "$CONFIG_DIR/.env" || -e "$CONFIG_DIR/assignment.conf" ]]; then
 
         echo "Warning: Existing configuration detected."
         read -r -p "Overwrite configuration? (y/N): " CONFIRM
@@ -125,6 +124,27 @@ initClassroom() {
         return 1
     fi
 
+    # Save or update the assignment-to-template mapping
+    local MAPPINGS_FILE="$CONFIG_DIR/assignments.conf"
+    local MAPPINGS_TMP
+
+    MAPPINGS_TMP=$(mktemp "$CONFIG_DIR/assignments.tmp.XXXXXX") || return 1
+
+    # Preserve mappings for other assignments
+    if [[ -f "$MAPPINGS_FILE" ]]; then
+        awk -F= -v assignment="$ASSIGNMENT" \
+            '$1 != assignment' "$MAPPINGS_FILE" > "$MAPPINGS_TMP"
+    fi
+
+    # Add or update the selected assignment
+    printf '%s=%s\n' "$ASSIGNMENT" "$TEMPLATE" >> "$MAPPINGS_TMP"
+
+    if ! mv -f "$MAPPINGS_TMP" "$MAPPINGS_FILE"; then
+        rm -f "$MAPPINGS_TMP"
+        echo "Error: Failed to save assignment mapping."
+        return 1
+    fi
+
     echo
     echo "========================================"
     echo "   WSU CLASSROOM INITIALIZED"
@@ -138,6 +158,34 @@ initClassroom() {
     echo "Initialization complete!"
 }
 
+# Retrieves the template repository for a given assignment from the assignments.conf file
+# Inputs:
+#       ASSIGNMENT_NAME - Name of the assignment to retrieve the template for
+# Outputs:
+#       Prints the template repository in owner/repository format if found
+#       Returns 0 if found, 1 if not found or if the configuration file does not exist
+# State Changes:
+#       None
+getAssignmentTemplate() {
+    local ASSIGNMENT_NAME="$1"
+    local CONFIG_FILE=".wsu_classroom/assignments.conf"
+    local NAME
+    local TEMPLATE_REPO
+
+    [[ -f "$CONFIG_FILE" ]] || return 1
+
+    while IFS='=' read -r NAME TEMPLATE_REPO || [[ -n "$NAME" ]]; do
+        # Ignore empty lines and comments
+        [[ -z "$NAME" || "$NAME" == \#* ]] && continue
+
+        if [[ "$NAME" == "$ASSIGNMENT_NAME" ]]; then
+            printf '%s\n' "$TEMPLATE_REPO"
+            return 0
+        fi
+    done < "$CONFIG_FILE"
+
+    return 1
+}
 
 # Displays the usage information for the WSU Classroom tools
 # Inputs:

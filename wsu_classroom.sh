@@ -305,6 +305,11 @@ WSU_classroom() (
     local GRANT_TA_ACCESS="N"
     local CLONE
 
+    local ASSIGNMENT_OVERRIDE="N"
+    local TEMPLATE_OVERRIDE="N"
+    local SAVED_ASSIGNMENT=""
+    local SAVED_TEMPLATE=""
+
     SCRIPT_DIR="${WSU_CLASSROOM_SCRIPT_DIR:-$HOME/.wsu_classroom}"
 
     source "$SCRIPT_DIR/classroom_git_checks.sh"
@@ -329,8 +334,11 @@ WSU_classroom() (
 
     if [[ -f .wsu_classroom/assignment.conf ]]; then
         source .wsu_classroom/assignment.conf
-        ASSIGNMENT="${WSU_ASSIGNMENT:-}"
-        TEMPLATE="${WSU_TEMPLATE:-}"
+
+        SAVED_ASSIGNMENT="${WSU_ASSIGNMENT:-}"
+        SAVED_TEMPLATE="${WSU_TEMPLATE:-}"
+
+        ASSIGNMENT="$SAVED_ASSIGNMENT"
         CSV_FILE="${WSU_CSV:-}"
     fi
 
@@ -348,12 +356,11 @@ WSU_classroom() (
                 ;;
             A)
                 ASSIGNMENT="$OPTARG"
-                CURRENT_TERM=$(getCurrentTerm)
-                REPO_NAME="$ASSIGNMENT-email-$CURRENT_TERM"
-                echo "Generated repository name: $REPO_NAME"
+                ASSIGNMENT_OVERRIDE="Y"
                 ;;
             T)
                 TEMPLATE="$OPTARG"
+                TEMPLATE_OVERRIDE="Y"
                 ;;
             C)
                 CSV_FILE="$OPTARG"
@@ -373,12 +380,6 @@ WSU_classroom() (
         esac
     done
 
-    # Determine current term for saved or command-line assignments
-    if [[ -n "$ASSIGNMENT" ]]; then
-        CURRENT_TERM=$(getCurrentTerm)
-        REPO_NAME="$ASSIGNMENT-email-$CURRENT_TERM"
-    fi
-
     # Prompt for any required options not supplied by config or CLI
     if [[ -z "$ORGANIZATION" ]]; then
         read -r -p "GitHub organization: " ORGANIZATION
@@ -388,9 +389,20 @@ WSU_classroom() (
         read -r -p "Assignment name: " ASSIGNMENT
     fi
 
-    if [[ -z "$TEMPLATE" ]]; then
-        read -r -p "Template repository (owner/repo): " TEMPLATE
+    # Resolve the template associated with the selected assignment
+    if [[ "$TEMPLATE_OVERRIDE" != "Y" && -n "$ASSIGNMENT" ]]; then
+        if TEMPLATE=$(getAssignmentTemplate "$ASSIGNMENT"); then
+            echo "Using configured template for '$ASSIGNMENT': $TEMPLATE"
+        elif [[ "$ASSIGNMENT" == "$SAVED_ASSIGNMENT" ]]; then
+            TEMPLATE="$SAVED_TEMPLATE"
+        else
+            TEMPLATE=""
+        fi
     fi
+
+if [[ -z "$TEMPLATE" ]]; then
+    read -r -p "Template repository (owner/repo): " TEMPLATE
+fi
 
     if [[ -z "$CSV_FILE" ]]; then
         read -r -p "Roster CSV path: " CSV_FILE
