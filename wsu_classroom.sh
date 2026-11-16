@@ -1,23 +1,90 @@
 #!/bin/bash
-# Function to clone repositories from a CSV file during the WSU Classroom script execution or as a standalone function
+# Function to clone repositories from a CSV file into an assignment directory
 # Inputs:
-#       User input - CSV file containing repository names and links
-#       User input - Directory to clone the repositories into
+#       REPO_FILE - CSV file containing repository names and links
+#       ASSIGNMENT - Assignment name
+#       CURRENT_TERM - Current academic term
+#       If no arguments are provided, prompts the user to select a CSV file
 # Outputs:
-#       Clones the repositories into the specified directory
+#       Clones repositories into a directory named assignment-term
 # State Changes:
-#       Repositories are cloned into the specified directory
+#       Creates an assignment-term directory and clones repositories into it
 cloneRepositories() {
 
-    local REPO_FILE
+    # Declare local variables
+    local REPO_FILE="$1"
+    local ASSIGNMENT="$2"
+    local CURRENT_TERM="$3"
+
     local CLONE_DIR
-    local CREATE
     local NAME
     local REPO_LINK
     local REPO_NAME
 
-    # Ask the user for the repository links CSV file
-    read -p "Enter the repository links CSV file: " REPO_FILE
+    local CSV_FILES=()
+    local CSV_COUNT
+    local SELECTION
+    local CONFIRM
+    local FILE
+
+    # If no repository file was passed, look for CSV files
+    # in the current directory
+    if [[ -z "$REPO_FILE" ]]; then
+
+        for FILE in ./*.csv; do
+            [[ -f "$FILE" ]] && CSV_FILES+=("$FILE")
+        done
+
+        CSV_COUNT=${#CSV_FILES[@]}
+
+        # No CSV files found
+        if [[ "$CSV_COUNT" -eq 0 ]]; then
+            echo "Error: No CSV files found in $(pwd)."
+            echo "Run cloneRepositories from a directory containing a repository links CSV file."
+            return 1
+        fi
+
+        # Only one CSV file found
+        if [[ "$CSV_COUNT" -eq 1 ]]; then
+            echo "Found CSV file:"
+            echo "  ${CSV_FILES[0]}"
+            echo
+
+            read -p "Would you like to use this file? (Y/N) [Y]: " CONFIRM
+            CONFIRM="${CONFIRM:-Y}"
+
+            if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+                echo "Repository cloning cancelled."
+                return 0
+            fi
+
+            REPO_FILE="${CSV_FILES[0]}"
+
+        # Multiple CSV files found
+        else
+            echo "CSV files found:"
+            echo
+
+            for ((i=0; i<CSV_COUNT; i++)); do
+                echo "$((i + 1)). ${CSV_FILES[$i]}"
+            done
+
+            echo
+            read -p "Select the repository links CSV file (1-$CSV_COUNT): " SELECTION
+
+            # Validate selection
+            if [[ ! "$SELECTION" =~ ^[0-9]+$ ]] ||
+               (( SELECTION < 1 || SELECTION > CSV_COUNT )); then
+                echo "Error: Invalid selection."
+                return 1
+            fi
+
+            REPO_FILE="${CSV_FILES[$((SELECTION - 1))]}"
+        fi
+
+        echo
+        echo "Selected: $REPO_FILE"
+    fi
 
     # Verify the repository links file exists
     if [[ ! -f "$REPO_FILE" ]]; then
@@ -25,24 +92,53 @@ cloneRepositories() {
         return 1
     fi
 
-    echo "Using repository links file: $REPO_FILE"
+    #
+    # If assignment and term were not passed, determine them
+    # from the repository links filename.
+    #
+    # Expected format:
+    # assignment-term-repo-links.csv
+    #
+    if [[ -z "$ASSIGNMENT" || -z "$CURRENT_TERM" ]]; then
 
-    # Ask where the repositories should be cloned
-    read -p "Enter the directory to clone repositories into: " CLONE_DIR
-    # handling tildes
-    eval CLONE_DIR="$CLONE_DIR"
+        local FILE_NAME
+        local BASE_NAME
 
-    # Create the directory if it does not exist
-    if [[ ! -d "$CLONE_DIR" ]]; then
-        read -p "Directory does not exist. Create it? (Y/N): " CREATE
+        FILE_NAME="${REPO_FILE##*/}"
+        BASE_NAME="${FILE_NAME%-repo-links.csv}"
 
-        if [[ "$CREATE" =~ ^[Yy]$ ]]; then
-            mkdir -p "$CLONE_DIR"
+        if [[ "$FILE_NAME" =~ -((f|s|su)[0-9]{2})-repo-links\.csv$ ]]; then
+
+            CURRENT_TERM="${BASH_REMATCH[1]}"
+            ASSIGNMENT="${BASE_NAME%-$CURRENT_TERM}"
+
         else
-            echo "Skipping repository cloning."
-            return 0
+            echo "Error: '$FILE_NAME' does not appear to be a repository links CSV file."
+            echo "Expected filename format:"
+            echo "  <assignment>-<term>-repo-links.csv"
+            return 1
         fi
     fi
+
+    CLONE_DIR="${ASSIGNMENT}-${CURRENT_TERM}"
+
+    echo
+    echo "Using repository links file: $REPO_FILE"
+    echo "Assignment: $ASSIGNMENT"
+    echo "Term: $CURRENT_TERM"
+
+    # Create the assignment directory if it does not exist
+    if [[ ! -d "$CLONE_DIR" ]]; then
+        mkdir -p "$CLONE_DIR"
+
+        if [[ $? -ne 0 ]]; then
+            echo "Error: Could not create directory '$CLONE_DIR'."
+            return 1
+        fi
+    fi
+
+    echo "Cloning repositories into: $(pwd)/$CLONE_DIR"
+    echo
 
     # Read repository information from the CSV file
     while IFS=',' read -r NAME REPO_LINK || [[ -n "$NAME" ]]
@@ -62,11 +158,22 @@ cloneRepositories() {
 
         echo "Cloning $NAME: $REPO_NAME..."
 
-        gh repo clone "$REPO_LINK" "$CLONE_DIR/$REPO_NAME"
+        # Skip repository if it has already been cloned
+        if [[ -d "$CLONE_DIR/$REPO_NAME" ]]; then
+            echo "Repository already exists. Skipping."
+            continue
+        fi
+
+        # Clone repository into assignment directory
+        if ! gh repo clone "$REPO_LINK" "$CLONE_DIR/$REPO_NAME"; then
+            echo "Error: Failed to clone $REPO_NAME."
+        fi
 
     done < "$REPO_FILE"
 
+    echo
     echo "Finished cloning repositories."
+    echo "Repositories cloned to: $(pwd)/$CLONE_DIR"
 }
 
 # Function to check if the user has pushed to the repository before the deadline
@@ -113,6 +220,68 @@ checkDueDate() {
     checkClonedRepos "$REPO_DIR" "$DEADLINE"
 }
 
+# Function to check the roster CSV file for missing or pending repository invitations and optionally resends them
+# Inputs:
+#       -O ORGANIZATION - GitHub organization
+#       -A ASSIGNMENT - Assignment name
+#       -C CSV_FILE - Class roster CSV file
+# Outputs:
+#       Prints the status of each student's repository invitation and optionally resends missing or pending invitations
+# State Changes:
+#       Missing or pending invitations may be resent to students
+checkInvites() {
+    local ORGANIZATION
+    local CSV_FILE
+    local ASSIGNMENT
+    local CURRENT_TERM
+    
+    OPTIND=1
+
+    while getopts ":O:A:C:" opt; do
+        case $opt in
+            O)
+                ORGANIZATION="$OPTARG"
+                ;;
+            C)
+                CSV_FILE="$OPTARG"
+                ;;
+            A)
+                ASSIGNMENT="$OPTARG"
+                ;;
+            :)
+                echo "Error: Option -$OPTARG requires an argument."
+                echo "Run 'checkInvites -h' for usage information."
+                return 1
+                ;;
+            \?)
+                echo "Error: Invalid option -$OPTARG"
+                echo "Run 'checkInvites -h' for usage information."
+                return 1
+                ;;
+        esac
+    done
+
+    if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$CSV_FILE" ]]; then
+        echo "Error: -O, -A, -C are required."
+        echo "Usage: checkInvites -O ORGANIZATION -A ASSIGNMENT -C CSV_FILE"
+        return 1
+    fi
+
+    if [[ ! -f "$CSV_FILE" ]]; then
+        echo "Error: CSV file '$CSV_FILE' not found."
+        return 1
+    fi
+
+    CURRENT_TERM=$(getCurrentTerm)
+
+    echo "Organization: $ORGANIZATION"
+    echo "Assignment: $ASSIGNMENT"
+    echo "Term: $CURRENT_TERM"
+    echo "CSV file: $CSV_FILE"
+
+    checkRosterInvites "$CSV_FILE" "$ORGANIZATION" "$ASSIGNMENT" "$CURRENT_TERM"
+}
+
 # Main function for the WSU Classroom script
 # Inputs:
 #       -O ORGANIZATION - GitHub organization
@@ -142,8 +311,10 @@ WSU_classroom() (
     source "$SCRIPT_DIR/classroom_git_checks.sh"
     source "$SCRIPT_DIR/classroom_helper.sh"
 
-    # check if the user is authenticated with GitHub
-    isGitAuth
+    if [[ "$1" == "-h" && "$#" -eq 1 ]]; then
+        usage
+        return 0
+    fi
 
     # process the command line arguments
     # if no arguments are provided, display usage information and exit
@@ -156,21 +327,19 @@ WSU_classroom() (
     # reset the option index for getopts
     OPTIND=1
 
-    while getopts ":h?O:A:T:C:" opt; do
+    while getopts ":hO:A:T:C:" opt; do
         case $opt in
-            h|\?)
+            h)
                 usage
-	            return 0
+                return 0
                 ;;
             O)
-	            ORGANIZATION="$OPTARG"
+                ORGANIZATION="$OPTARG"
                 ;;
             A)
                 ASSIGNMENT="$OPTARG"
-
-	            CURRENT_TERM=$(getCurrentTerm)
+                CURRENT_TERM=$(getCurrentTerm)
                 REPO_NAME="$ASSIGNMENT-email-$CURRENT_TERM"
-
                 echo "Generated repository name: $REPO_NAME"
                 ;;
             T)
@@ -181,12 +350,14 @@ WSU_classroom() (
                 ;;
             :)
                 echo "Error: Option -$OPTARG requires an argument."
-                usage
+                echo "Run 'WSU_classroom -h' for usage information."
+                repoGenerationUsage
                 return 1
                 ;;
-            *)
+            \?)
                 echo "Error: Invalid option -$OPTARG"
-                usage
+                echo "Run 'WSU_classroom -h' for usage information."
+                repoGenerationUsage
                 return 1
                 ;;
         esac
@@ -195,12 +366,18 @@ WSU_classroom() (
     # make sure both an organization and assignment were provided
     if [[ -z "$ORGANIZATION" || -z "$ASSIGNMENT" || -z "$TEMPLATE" || -z "$CSV_FILE" ]]; then
         echo "Error: -O -A -T -C are required."
-        usage
+        repoGenerationUsage
         return 1
     fi
 
+    # check if the user is authenticated with GitHub
+    isGitAuth
+
     # verify ownership of the organization
-    checkOrganizationOwnership "$ORGANIZATION"
+    if ! checkOrganizationOwnership "$ORGANIZATION"; then
+        echo "Error: You do not have ownership of the organization '$ORGANIZATION'."
+        return 1
+    fi
 
     # verify that the specified template repository exists and is a template repository
     checkTemplateRepo "$TEMPLATE"
@@ -219,9 +396,11 @@ WSU_classroom() (
     # check if the CSV file contains TAs and prompt the user to create TA repositories and grant access to student repositories
     if hasTAs "$CSV_FILE"; then
         echo
-        read -p "Would you like to create repositories for TAs? (Y/N): " CREATE_TA_REPOS
+        read -p "Would you like to create repositories for TAs? (Y/N) [N]: " CREATE_TA_REPOS
+        CREATE_TA_REPOS="${CREATE_TA_REPOS:-N}"
 
-        read -p "Would you like to grant TAs access to student repositories? (Y/N): " GRANT_TA_ACCESS
+        read -p "Would you like to grant TAs access to student repositories? (Y/N) [Y]: " GRANT_TA_ACCESS
+        GRANT_TA_ACCESS="${GRANT_TA_ACCESS:-Y}"
     fi
 
     # process the class roster and create repositories
@@ -229,11 +408,14 @@ WSU_classroom() (
 
     # allows the user to clone the student repositories to their local machine if they want
     echo
-    read -p "Would you like to clone the student repositories to your local machine? (Y/N): " CLONE
+    read -p "Would you like to clone the student repositories to your local machine? (Y/N) [N]: " CLONE
+    CLONE="${CLONE:-N}"
 
     if [[ "$CLONE" =~ ^[Yy]$ ]]; then
-        cloneRepositories
-        echo "All repositories cloned."
+        cloneRepositories \
+        "${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv" \
+        "$ASSIGNMENT" \
+        "$CURRENT_TERM"
     else
         echo "Skipping repository cloning."
     fi

@@ -1,17 +1,75 @@
-# Displays the usage information for the script
+# Displays the usage information for the WSU Classroom tools
 # Inputs:
 #       None
 # Outputs:
-#       Prints the usage information to the console
+#       Prints usage information for WSU_classroom, cloneRepositories,
+#       checkDueDate, and checkInvites commands
 # State Changes:
 #       None
 usage() {
-    echo "Usage: WSU_classroom [-h] [-O organization] [-A assignment] [-T template] [-C csv_file]"
+    echo
+    echo "                                  WSU Classroom"
+    echo "=========================================================================================="
+    echo "Usage:"
+    echo "  WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>"
+    echo "  WSU_classroom -h"
+    echo
+    echo "Required Options:"
+    echo "  -O organization   GitHub organization where repositories will be created"
+    echo "  -A assignment     Assignment name used when generating repository names"
+    echo "  -T template       GitHub template repository in owner/repository format"
+    echo "  -C csv_file       Class roster CSV containing Name, Email, Role, and Username"
+    echo
+    echo "=========================================================================================="
+    echo
+    echo "Other Options:"
     echo "  -h                Show this help message and exit"
-    echo "  -O organization   Check if authenticated user is an owner of the specified GitHub organization"
-    echo "  -A assignment     Generate a repository name based on the assignment, username, and term"
-    echo "  -T template       Specify the template repository to use for creating new repositories"
-    echo "  -C csv_file       Specify the class roster CSV file"
+    echo
+    echo "=========================================================================================="
+    echo
+    echo "Additional Commands:"
+    echo
+    echo "  cloneRepositories"
+    echo "      Clone repositories listed in a generated repository-links CSV file."
+    echo "      The command prompts for the CSV file and destination directory."
+    echo
+    echo "  checkDueDate -D \"MM/DD/YYYY [HH:MM AM/PM]\" <repository-directory>"
+    echo "      Check cloned student repositories for an eligible push on or before"
+    echo "      the assignment deadline."
+    echo
+    echo "      -D due_date      Assignment deadline."
+    echo "                       If no time is provided, defaults to 11:59 PM."
+    echo
+    echo "  checkInvites -O <organization> -A <assignment> -C <csv_file>"
+    echo "      Check student repository invitation statuses and optionally resend"
+    echo "      missing or pending invitations."
+    echo
+    echo "      -O organization   GitHub organization containing the repositories."
+    echo "      -A assignment     Assignment name used in repository names."
+    echo "      -C csv_file       Class roster CSV containing Name, Email, Role, and Username."
+    echo
+    echo "=========================================================================================="
+    return 0
+}
+
+# Displays the usage information for the repository generation command
+# Inputs:
+#       None
+# Outputs:
+#       Prints usage information for the repository generation command
+# State Changes:
+#       None
+repoGenerationUsage() {
+    echo
+    echo "Usage: WSU_classroom -O <organization> -A <assignment> -T <template> -C <csv_file>"
+    echo
+    echo "Required Options:"
+    echo "  -O organization   GitHub organization where repositories will be created"
+    echo "  -A assignment     Assignment name used when generating repository names"
+    echo "  -T template       GitHub template repository in owner/repository format"
+    echo "  -C csv_file       Class roster CSV containing Name, Email, Role, and Username"
+    echo
+    echo "Run 'WSU_classroom -h' for more information."
     return 0
 }
 
@@ -123,19 +181,22 @@ exportRepoLinks() {
         return 1
     fi
 
-    echo "Name,Repository Link" > "$OUTPUT_FILE"
+    # Only write the header when csv file does not exist
+    if [[ ! -f "$OUTPUT_FILE" ]]; then
+        echo "Name,Repository Link" > "$OUTPUT_FILE"
+    fi
 
     # Sort the generated repository links by name and export them to the CSV file
     printf "%s\n" "${GENERATED_REPO_LINKS[@]}" \
-        | awk -F',' '{
-            split($1, name, " ")
-            print name[length(name)] "," $0
-        }' \
-        | sort -t',' -k1,1 \
-        | cut -d',' -f2- \
-        >> "$OUTPUT_FILE"
+    | awk -F',' '{
+        split($1, name, " ")
+        print name[length(name)] "," $0
+    }' \
+    | sort -t',' -k1,1 \
+    | cut -d',' -f2- \
+    >> "$OUTPUT_FILE"
 
-    echo "Repository links exported to $OUTPUT_FILE"
+    echo "Exported repo links to $(pwd)/$OUTPUT_FILE"
 }
 
 # Generates a unique identifier from an email address by removing the domain and any periods
@@ -266,6 +327,7 @@ configurationSummary() {
     local INVALID_EMAIL
     local INVALID_ROLE
     local INVALID_USERNAME
+    local REPO_LINKS_FILE="$(pwd)/${ASSIGNMENT}-${CURRENT_TERM}-repo-links.csv"
 
     while IFS=',' read -r NAME EMAIL ROLE USERNAME || [[ -n "$NAME" ]]
     do
@@ -277,6 +339,11 @@ configurationSummary() {
         EMAIL=${EMAIL//$'\r'/}
         ROLE=${ROLE//$'\r'/}
         USERNAME=${USERNAME//$'\r'/}
+
+        # Skip empty lines
+        if [[ -z "$NAME" && -z "$EMAIL" && -z "$ROLE" && -z "$USERNAME" ]]; then
+            continue
+        fi
 
         # Count roles
         case "$ROLE" in
@@ -299,23 +366,24 @@ configurationSummary() {
     done < "$CSV_FILE"
 
     echo
-    echo "========================================"
-    echo "        CONFIGURATION SUMMARY"
-    echo "========================================"
+    echo "================================================"
+    echo "              CONFIGURATION SUMMARY"
+    echo "================================================"    
     echo
-    echo "Organization:          $ORGANIZATION"
-    echo "Assignment:            $ASSIGNMENT"
-    echo "Term:                  $CURRENT_TERM"
-    echo "Template:              $TEMPLATE"
-    echo "Roster:                $CSV_FILE"
+    echo "Organization:             $ORGANIZATION"
+    echo "Assignment:               $ASSIGNMENT"
+    echo "Term:                     $CURRENT_TERM"
+    echo "Template:                 $TEMPLATE"
+    echo "Roster:                   $CSV_FILE"
+    echo "Repository Exported to:   $REPO_LINKS_FILE"
     echo
-    echo "Students:              $STUDENT_COUNT"
-    echo "TAs:                   $TA_COUNT"
-    echo "Instructors:           $INSTRUCTOR_COUNT"
-    echo "Invalid usernames:     ${#INVALID_USERS[@]}"
+    echo "Students:                 $STUDENT_COUNT"
+    echo "TAs:                      $TA_COUNT"
+    echo "Instructors:              $INSTRUCTOR_COUNT"
+    echo "Invalid usernames:        ${#INVALID_USERS[@]}"
     echo
-    echo "Create TA repos:       $CREATE_TA_REPOS"
-    echo "Grant TA access:       $GRANT_TA_ACCESS"
+    echo "Create TA repos:          $CREATE_TA_REPOS"
+    echo "Grant TA access:          $GRANT_TA_ACCESS"
 
     if [[ ${#INVALID_USERS[@]} -gt 0 ]]; then
         echo
@@ -337,7 +405,7 @@ configurationSummary() {
     fi
 
     echo
-    echo "========================================"
+    echo "================================================"  
 }
 
 # Formats a due date string into UTC format
